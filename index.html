@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06070b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Life CFO">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Life CFO</title>
+<style>
+:root{
+  --bg:#06070b;--card:rgba(255,255,255,.045);--card2:rgba(255,255,255,.075);--line:rgba(255,255,255,.08);
+  --text:#f5f7fc;--muted:#8b91a5;--accent:#6a7dff;--accent2:#b05cff;--cyan:#38e1ff;
+  --red:#ff5d73;--amber:#ffb547;--green:#2ee59d;--blue:#4fb3ff;--violet:#b583ff;
+  --grad:linear-gradient(135deg,#4f7cff 0%,#8b5bff 55%,#d45cff 100%);
+  --r:24px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{background:transparent;padding:calc(env(safe-area-inset-top) + 6px) 0 calc(env(safe-area-inset-bottom) + 112px);font-variant-numeric:tabular-nums}
+/* ambient background */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.bg i{position:absolute;border-radius:50%;animation:float 22s ease-in-out infinite alternate}
+.bg i:nth-child(1){width:520px;height:520px;background:radial-gradient(circle,rgba(70,90,255,.55),transparent 65%);top:-260px;left:-200px}
+.bg i:nth-child(2){width:460px;height:460px;background:radial-gradient(circle,rgba(170,70,255,.42),transparent 65%);top:-200px;right:-220px;animation-duration:28s}
+.bg i:nth-child(3){width:420px;height:420px;background:radial-gradient(circle,rgba(0,190,255,.16),transparent 65%);top:420px;left:-220px;animation-duration:34s}
+@keyframes float{to{transform:translate(60px,40px) scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.bg i{animation:none}}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 6px;gap:8px}
+header h1{font-size:26px;margin:0;letter-spacing:-.6px;font-weight:750;flex:1}
+.month{display:flex;align-items:center;gap:4px;color:var(--text);font-size:13px;font-weight:600;background:var(--card);border:1px solid var(--line);border-radius:40px;padding:3px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.month span{padding:0 4px;min-width:64px;text-align:center}
+.hbtn{background:var(--card);border:1px solid var(--line);color:var(--text);min-width:34px;height:34px;border-radius:50%;font-size:16px;display:grid;place-items:center;padding:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.month .hbtn{min-width:28px;height:28px;border:0;background:var(--card2)}
+main{padding:8px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:12px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.muted{color:var(--muted)}.small{font-size:12.5px}
+h2{font-size:17px;letter-spacing:-.2px;color:var(--text);margin:24px 4px 10px;font-weight:700}
+h2 .muted{font-weight:500;font-size:13px}
+/* hero */
+.hero{text-align:center;padding:22px 4px 8px}
+.hero-label{font-size:13px;color:var(--muted);font-weight:500;display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);padding:5px 12px;border-radius:30px}
+.hero-num{font-size:52px;font-weight:750;letter-spacing:-2px;margin:14px 0 2px;line-height:1}
+.hero-num small,.money small{font-size:.5em;letter-spacing:-.5px;opacity:.75}
+.hero-sub{color:var(--muted);font-size:13.5px}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.actions{display:flex;justify-content:center;gap:22px;margin:24px 0 8px}
+.act{background:none;border:0;color:var(--text);font:inherit;font-size:12px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0}
+.act i{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);font-style:normal;transition:transform .15s}
+.act:active i{transform:scale(.92)}
+.act.primary i{background:var(--grad);border:0;box-shadow:0 8px 24px rgba(110,90,255,.45)}
+.act svg{width:22px;height:22px}
+/* score */
+.score{display:flex;align-items:center;gap:16px}
+.ring{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;flex:none;position:relative}
+.ring span{width:62px;height:62px;border-radius:50%;background:#0c0e15;display:grid;place-items:center;font-size:22px;font-weight:750}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.kpi{background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:12px 14px}
+.kpi b{display:block;font-size:19px;margin-top:3px;letter-spacing:-.4px}
+.strip{display:flex;gap:10px;overflow-x:auto;margin:0 -16px;padding:2px 16px 4px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.strip .kpi{flex:none;min-width:132px;background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.big{font-size:40px;font-weight:750;letter-spacing:-1.5px;line-height:1.1}
+.bar{height:6px;background:rgba(255,255,255,.07);border-radius:6px;overflow:hidden;margin-top:8px;display:flex}
+.bar i{display:block;height:100%;border-radius:6px;background:var(--grad)}
+/* briefing */
+.flag{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line);align-items:flex-start}
+.flag:first-child{border-top:0;padding-top:0}
+.flag:last-child{padding-bottom:0}
+.ico{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;flex:none;font-size:15px;font-weight:800}
+.ico.red{background:rgba(255,93,115,.14);color:var(--red)}.ico.amber{background:rgba(255,181,71,.14);color:var(--amber)}.ico.green{background:rgba(46,229,157,.13);color:var(--green)}.ico.blue{background:rgba(79,179,255,.14);color:var(--blue)}.ico.violet{background:rgba(181,131,255,.15);color:var(--violet)}
+.dot{width:9px;height:9px;border-radius:50%;margin-top:6px;flex:none}
+.red{background:var(--red)}.amber{background:var(--amber)}.green{background:var(--green)}.blue{background:var(--blue)}.violet{background:var(--violet)}
+.ico.red,.ico.amber,.ico.green,.ico.blue,.ico.violet{background-clip:padding-box}
+.flag b{display:block;font-weight:650;margin-bottom:1px}
+/* list rows with avatars */
+.cat,.tx{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.cat:first-child,.tx:first-child{border-top:0;padding-top:0}
+.cat:last-child,.tx:last-child{padding-bottom:0}
+.cat .grow,.tx .grow{flex:1;min-width:0}
+.tx .grow>div:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:550}
+.av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:19px;border:1px solid transparent}
+.amt-r{text-align:right;font-weight:650;white-space:nowrap}
+input,select,textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:rgba(122,110,255,.7);box-shadow:0 0 0 4px rgba(122,110,255,.15)}
+select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+option{background:#151824}
+textarea{min-height:140px;font-size:14px}
+textarea.mono{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+label{display:block;font-size:12.5px;color:var(--muted);margin:12px 0 6px;font-weight:500}
+.btn{display:inline-block;background:var(--grad);color:#fff;border:0;border-radius:16px;padding:14px 16px;font:inherit;font-weight:650;width:100%;margin-top:12px;text-align:center;box-shadow:0 8px 24px rgba(110,90,255,.3);transition:transform .12s}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line);box-shadow:none}
+.btn.danger{background:transparent;color:var(--red);border:1px solid rgba(255,93,115,.3);box-shadow:none}
+.btn:disabled{opacity:.5}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.grid2>*,.grid3>*{min-width:0}
+input[type=month],input[type=date]{min-width:0;-webkit-appearance:none;appearance:none}
+.pos{color:var(--green)}.neg{color:var(--red)}
+/* floating nav */
+nav{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 10px);background:rgba(18,20,30,.72);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);border:1px solid rgba(255,255,255,.09);border-radius:28px;display:flex;padding:7px 4px;z-index:5;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+nav button{flex:1;background:none;border:0;color:var(--muted);font:inherit;font-size:10px;font-weight:600;padding:6px 0 4px;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:20px;transition:color .2s,background .2s}
+nav button svg{width:22px;height:22px}
+nav button.on{color:#fff;background:rgba(255,255,255,.07)}
+nav button.on svg{stroke:url(#ng);filter:drop-shadow(0 0 6px rgba(140,110,255,.6))}
+.fab{position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom) + 92px);width:56px;height:56px;border-radius:50%;background:var(--grad);color:#fff;border:0;font-size:28px;font-weight:300;box-shadow:0 10px 30px rgba(120,90,255,.55);z-index:6}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;z-index:10}
+.sheet.open{display:flex;animation:fade .2s}
+.sheet .panel{background:#10121a;border:1px solid var(--line);border-bottom:0;width:100%;border-radius:28px 28px 0 0;padding:26px 18px calc(env(safe-area-inset-bottom) + 18px);max-height:92vh;overflow:auto;position:relative;animation:up .28s cubic-bezier(.2,.9,.3,1)}
+.sheet .panel::before{content:"";position:absolute;top:9px;left:50%;width:38px;height:5px;margin-left:-19px;border-radius:3px;background:rgba(255,255,255,.18)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+@keyframes fade{from{opacity:0}}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(255,255,255,.06);border-radius:16px;padding:4px}
+.seg button{background:none;border:0;color:var(--muted);padding:10px 4px;border-radius:12px;font:inherit;font-weight:650;font-size:13.5px}
+.seg button.on{background:rgba(255,255,255,.12);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.amt{font-size:40px!important;font-weight:750;text-align:center;letter-spacing:-1px;background:transparent!important;border:0!important;box-shadow:none!important}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 14px);background:rgba(30,33,48,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:30px;font-size:14px;font-weight:550;opacity:0;transition:.25s;z-index:20;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.empty{text-align:center;color:var(--muted);padding:24px 8px}
+a{color:#9aa8ff}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:9px 4px;border-top:1px solid var(--line);text-align:right}
+th{color:var(--muted);font-weight:600;font-size:12px;border-top:0}
+td:first-child,th:first-child{text-align:left}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 12px;padding:2px 16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:30px;padding:9px 14px;font:inherit;font-size:13px;font-weight:550;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.msg{padding:12px 15px;border-radius:20px;margin-bottom:10px;max-width:92%}
+.msg.u{background:var(--grad);color:#fff;margin-left:auto;border-bottom-right-radius:6px}
+.msg.a{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:6px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.msg.a h3,.msg.a h4{margin:10px 0 4px;font-size:15px}.msg.a p{margin:6px 0}.msg.a ul{margin:6px 0;padding-left:20px}
+.composer{display:flex;gap:8px;position:sticky;bottom:calc(env(safe-area-inset-bottom) + 92px);padding:8px 0}
+.composer textarea{min-height:48px;height:48px;border-radius:24px;background:rgba(20,22,32,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.composer button{width:48px;height:48px;margin:0;padding:0;border-radius:50%;flex:none;display:grid;place-items:center}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--card2);color:var(--muted)}
+svg.chart text{fill:var(--muted);font-size:10px}
+.glow{position:relative;overflow:hidden}
+.glow::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,rgba(120,130,255,.6),rgba(200,90,255,.15) 40%,transparent 70%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="bg"><i></i><i></i><i></i></div>
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ng" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6a8bff"/><stop offset="1" stop-color="#d45cff"/></linearGradient></defs></svg>
+<header>
+  <h1 id="title">Life CFO</h1>
+  <div class="month"><button class="hbtn" id="mPrev" aria-label="Previous month">‹</button><span id="mLabel"></span><button class="hbtn" id="mNext" aria-label="Next month">›</button></div>
+  <button class="hbtn" id="gear" aria-label="Settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
+</header>
+<main id="view"></main>
+<button class="fab" id="fab" aria-label="Add transaction">+</button>
+<nav id="nav">
+  <button data-v="cfo" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-8 9 8M5 10v10h14V10"/></svg>CFO</button>
+  <button data-v="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 6"/></svg>Budget</button>
+  <button data-v="tx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Spending</button>
+  <button data-v="wealth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Wealth</button>
+  <button data-v="tax"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg>Tax</button>
+  <button data-v="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM19 15l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/></svg>AI CFO</button>
+</nav>
+
+<div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileCSV" accept=".csv,text/csv" hidden>
+<input type="file" id="fileJSON" accept=".json,application/json" hidden>
+
+<script>
+/* =========================================================
+   STORAGE
+   ========================================================= */
+const KEY='lifecfo.v1';
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const DEFAULT_CATS=[['Housing','need'],['Groceries','need'],['Bills & utilities','need'],['Transport','need'],['Health & fitness','need'],['Eating out','want'],['Going out & nightlife','want'],['Shopping','want'],['Subscriptions','want'],['Fun & travel','want'],['Other','want'],['Savings & investing','save']];
+const DEFAULT_RULES=`# keyword = Category  (first match wins)
+uber eats = Eating out
+glovo = Eating out
+just eat = Eating out
+deliveroo = Eating out
+restaurant = Eating out
+restaurante = Eating out
+cafe = Eating out
+bar = Going out & nightlife
+pub = Going out & nightlife
+club = Going out & nightlife
+discoteca = Going out & nightlife
+ticketmaster = Going out & nightlife
+fever = Going out & nightlife
+mercadona = Groceries
+carrefour = Groceries
+lidl = Groceries
+aldi = Groceries
+consum = Groceries
+dia = Groceries
+netflix = Subscriptions
+spotify = Subscriptions
+disney = Subscriptions
+hbo = Subscriptions
+apple.com = Subscriptions
+google = Subscriptions
+prime = Subscriptions
+chatgpt = Subscriptions
+anthropic = Subscriptions
+claude = Subscriptions
+uber = Transport
+cabify = Transport
+bolt = Transport
+renfe = Transport
+repsol = Transport
+cepsa = Transport
+iberdrola = Bills & utilities
+endesa = Bills & utilities
+vodafone = Bills & utilities
+movistar = Bills & utilities
+orange = Bills & utilities
+digi = Bills & utilities
+pharmacy = Health & fitness
+farmacia = Health & fitness
+gym = Health & fitness
+amazon = Shopping
+zara = Shopping
+ryanair = Fun & travel
+vueling = Fun & travel
+emirates = Fun & travel
+booking = Fun & travel
+airbnb = Fun & travel`;
+function defaults(){return{v:2,
+  settings:{currency:'EUR',income:0,savingsTarget:20,efMonths:6},
+  categories:DEFAULT_CATS.map(([name,kind])=>({id:uid(),name,kind,budget:0})),
+  tx:[],accounts:[],rules:DEFAULT_RULES,
+  goal:{target:0,date:'',coreReturn:8},
+  alloc:{aggrPct:20,aggrIncome:250,aggrReturn:15},
+  holdings:[],
+  tax:{regime:'es',marginal:37,pensionYTD:0,moveDate:'',returnDate:''},
+  taxlog:[],
+  ai:{key:'',model:'claude-sonnet-5-5',web:true,allowTx:true,profile:'',profileUpdated:null,chat:[]},
+  updated:null}}
+let S;
+function migrate(o){
+  const D=defaults();
+  if(!o||!Array.isArray(o.categories))return D;
+  for(const k of Object.keys(D)){if(o[k]===undefined)o[k]=D[k];else if(D[k]&&typeof D[k]==='object'&&!Array.isArray(D[k]))o[k]={...D[k],...o[k]}}
+  return o;
+}
+function load(){let o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){}S=migrate(o)}
+function save(){S.updated=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device')}}
+load();
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+
+/* =========================================================
+   UTILS
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const today=()=>iso(new Date());
+const thisMonth=()=>today().slice(0,7);
+const thisYear=()=>new Date().getFullYear();
+function shiftMonth(m,n){const[y,mo]=m.split('-').map(Number);return iso(new Date(y,mo-1+n,1)).slice(0,7)}
+function daysIn(m){const[y,mo]=m.split('-').map(Number);return new Date(y,mo,0).getDate()}
+function monthName(m){const[y,mo]=m.split('-').map(Number);return new Date(y,mo-1,1).toLocaleDateString(undefined,{month:'short',year:'numeric'})}
+function monthsBetween(a,b){const[y1,m1]=a.split('-').map(Number),[y2,m2]=b.split('-').map(Number);return(y2-y1)*12+(m2-m1)}
+function fmt(n,d=0){try{return new Intl.NumberFormat(undefined,{style:'currency',currency:S.settings.currency,minimumFractionDigits:d,maximumFractionDigits:d}).format(n||0)}catch(e){return (n||0).toFixed(d)}}
+const pct=(x,d=0)=>(isFinite(x)?x:0).toFixed(d)+'%';
+const num=v=>{const x=parseFloat(String(v??'').replace(',','.'));return isFinite(x)?x:0};
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2600)}
+const catById=()=>Object.fromEntries(S.categories.map(c=>[c.id,c]));
+const sum=(a,f=x=>x)=>a.reduce((s,x)=>s+f(x),0);
+
+
+/* ---------- visual helpers ---------- */
+const ICONS=[[/hous|rent|alquiler|hogar/i,'🏠','#4fb3ff'],[/grocer|super|mercad/i,'🛒','#2ee59d'],[/bill|util/i,'💡','#ffb547'],[/transport|car|fuel/i,'🚗','#38e1ff'],[/health|fit|gym/i,'💪','#ff7ab6'],[/eating|food|restaur/i,'🍽️','#ff8a4c'],[/going out|night|bar|party/i,'🍸','#b583ff'],[/shop/i,'🛍️','#ff5d73'],[/subscri/i,'🔁','#8b9cff'],[/travel|fun|holiday/i,'✈️','#38e1ff'],[/sav|invest/i,'📈','#2ee59d'],[/other/i,'✳️','#8b91a5']];
+function catIcon(name){for(const[r,e,c]of ICONS)if(r.test(name||''))return{e,c};return{e:'•',c:'#8b91a5'}}
+function av(name,income){const{e,c}=income?{e:'💶',c:'#2ee59d'}:catIcon(name);return`<div class="av" style="background:${c}1f;border-color:${c}33">${e}</div>`}
+function money(n,d=2){
+  try{const parts=new Intl.NumberFormat(undefined,{style:'currency',currency:S.settings.currency,minimumFractionDigits:d,maximumFractionDigits:d}).formatToParts(n||0);
+    let main='',frac='';let seenDec=false;
+    for(const p of parts){if(p.type==='decimal'){seenDec=true;frac+=p.value}else if(p.type==='fraction')frac+=p.value;else if(seenDec&&p.type==='currency'){frac+=p.value}else if(seenDec&&p.type==='literal'){frac+=p.value}else main+=p.value}
+    return`<span class="money">${esc(main)}${frac?`<small>${esc(frac)}</small>`:''}</span>`}catch(e){return esc(fmt(n,d))}
+}
+const SEV_ICON={red:'!',amber:'▲',violet:'✈',blue:'✦',green:'✓'};
+const I={
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  imp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  ai:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>',
+  goal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8" fill="currentColor"/></svg>',
+  send:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+};
+
+/* =========================================================
+   SPENDING NUMBERS
+   ========================================================= */
+function stats(m){
+  const C=catById(),tx=S.tx.filter(t=>t.date.slice(0,7)===m),byCat={};
+  let inc=0,spent=0,saved=0,needs=0,wants=0,uncat=0;
+  for(const t of tx){
+    if(t.type==='income'){inc+=t.amount;continue}
+    const c=C[t.cat];byCat[t.cat]=(byCat[t.cat]||0)+t.amount;
+    if(!c){uncat+=t.amount;spent+=t.amount;wants+=t.amount;continue}
+    if(c.kind==='save')saved+=t.amount;else{spent+=t.amount;c.kind==='need'?needs+=t.amount:wants+=t.amount}
+  }
+  const now=thisMonth(),isCur=m===now,dim=daysIn(m),day=isCur?new Date().getDate():dim,frac=Math.min(1,day/dim);
+  let proj=0,projNeeds=0,projWants=0;const projCat={};
+  for(const c of S.categories){
+    if(c.kind==='save')continue;const sp=byCat[c.id]||0,b=+c.budget||0;let p=sp;
+    if(isCur){p=c.kind==='need'?Math.max(sp,b):(frac>0.2?Math.max(sp,sp/frac):Math.max(sp,b))}
+    projCat[c.id]=p;proj+=p;c.kind==='need'?projNeeds+=p:projWants+=p;
+  }
+  proj+=uncat;projWants+=uncat;
+  const income=inc>0?inc:(+S.settings.income||0);
+  return{tx,byCat,inc,income,spent,saved,needs,wants,uncat,isCur,dim,day,frac,proj,projNeeds,projWants,projCat,future:m>now};
+}
+const acc=types=>sum(S.accounts.filter(a=>types.includes(a.type)),a=>+a.balance||0);
+
+/* =========================================================
+   WEALTH NUMBERS
+   ========================================================= */
+function wealth(){
+  const cash=acc(['cash','savings']),otherInv=acc(['invest']),debt=acc(['debt']);
+  const core=sum(S.holdings.filter(h=>h.bucket==='core'),h=>+h.value||0);
+  const aggr=sum(S.holdings.filter(h=>h.bucket==='aggr'),h=>+h.value||0);
+  const invested=core+aggr+otherInv;
+  const nw=cash+invested-debt;
+  const cost=sum(S.holdings,h=>+h.cost||0),value=core+aggr;
+  const aggrShare=value?aggr/value*100:0;
+  // monthly saving capacity: avg of last 3 complete months with income, else plan
+  const ms=[1,2,3].map(i=>stats(shiftMonth(thisMonth(),-i))).filter(s=>s.inc>0);
+  let monthly=ms.length?sum(ms,s=>s.inc-s.spent)/ms.length:0;
+  if(!ms.length){const planned=+S.settings.income||0,bud=sum(S.categories.filter(c=>c.kind!=='save'),c=>+c.budget||0);monthly=planned&&bud?planned-bud:0}
+  const a=S.alloc,blended=((100-a.aggrPct)*(+S.goal.coreReturn||0)+a.aggrPct*(+a.aggrReturn||0))/100;
+  return{cash,otherInv,debt,core,aggr,invested,nw,cost,value,aggrShare,monthly:Math.max(0,monthly),blended};
+}
+// Future value with monthly compounding on invested money, cash held flat
+function fv(invested,cash,pmt,annual,n){const r=annual/100/12;const g=Math.pow(1+r,n);return invested*g+cash+(r?pmt*(g-1)/r:pmt*n)}
+function goalPlan(){
+  const W=wealth(),G=S.goal;if(!(+G.target>0)||!G.date)return null;
+  const n=Math.max(1,monthsBetween(thisMonth(),G.date.slice(0,7)));
+  const r=W.blended/100/12,g=Math.pow(1+r,n),k=r?(g-1)/r:n;
+  const investedNet=W.invested-W.debt;
+  const required=Math.max(0,(+G.target-W.cash-investedNet*g)/k);
+  const projected=fv(investedNet,W.cash,W.monthly,W.blended,n);
+  return{W,n,required,projected,onTrack:W.monthly>=required*0.98,gap:required-W.monthly};
+}
+
+/* =========================================================
+   TAX ENGINE (Spain / Beckham / UAE). Figures checked Nov 2026.
+   ========================================================= */
+const ES_SAVINGS=[[6000,.19],[50000,.21],[200000,.23],[300000,.27],[Infinity,.30]];
+const BECKHAM_SAVINGS=[[6000,.19],[50000,.21],[Infinity,.23]];
+function prog(base,br){if(base<=0)return 0;let t=0,prev=0;for(const[cap,r]of br){if(base<=prev)break;t+=(Math.min(base,cap)-prev)*r;prev=cap}return t}
+const REGIMES={es:'Spain (standard)',beckham:'Spain (Beckham)',uae:'UAE'};
+function savingsTax(base,regime){return regime==='uae'?0:regime==='beckham'?prog(base,BECKHAM_SAVINGS):prog(base,ES_SAVINGS)}
+function taxYear(y=thisYear()){
+  const L=S.taxlog.filter(t=>t.date.slice(0,4)==String(y));
+  const gains=sum(L.filter(t=>t.type==='gain'),t=>t.amount),div=sum(L.filter(t=>t.type==='dividend'),t=>t.amount),int=sum(L.filter(t=>t.type==='interest'),t=>t.amount);
+  return{L,gains,div,int,base:gains+div+int};
+}
+function unrealised(){
+  const rows=S.holdings.map(h=>({h,g:(+h.value||0)-(+h.cost||0)}));
+  return{rows,gain:sum(rows.filter(r=>r.g>0),r=>r.g),loss:sum(rows.filter(r=>r.g<0),r=>-r.g)};
+}
+function movePlan(){
+  const T=S.tax;if(!T.moveDate)return null;
+  const[y,m]=T.moveDate.split('-').map(Number);
+  const firstNR=m<=6?y:y+1; // Spain residence is per calendar year: >183 days in Spain = resident all year
+  const beckhamYear=firstNR+5; // must be non-resident for the 5 tax years before the year you come back
+  let ret=null;if(T.returnDate){const ry=+T.returnDate.slice(0,4);ret={year:ry,beckham:ry>=beckhamYear}}
+  return{y,m,firstNR,beckhamYear,ret};
+}
+
+/* =========================================================
+   THE CFO (rule engine)
+   ========================================================= */
+function cfo(m){
+  const s=stats(m),P=stats(shiftMonth(m,-1)),set=S.settings,F=[];
+  const add=(sev,title,detail)=>F.push({sev,title,detail});
+  const spendCats=S.categories.filter(c=>c.kind!=='save');
+  const totalBudget=sum(S.categories,c=>+c.budget||0),planned=+set.income||0;
+  if(!S.tx.length&&!totalBudget&&!S.accounts.length&&!S.holdings.length){add('blue','Let\'s get you set up','1) Settings (gear): add your monthly take-home pay. 2) Budget: set a limit per category. 3) Log spending with + or import your bank CSV. 4) Wealth: add balances, investments and a net worth goal. 5) AI CFO: paste your Claude API key.');return{F,s,score:null}}
+  if(s.future){add('blue','Future month','Nothing to review yet. Your budget will apply here automatically.');return{F,s,score:null}}
+
+  if(!planned)add('amber','No income set','Add your monthly take-home pay in Settings so I can judge your budget and savings rate.');
+  if(planned&&totalBudget>planned)add('red','Your budget is bigger than your income',`Budgets total ${fmt(totalBudget)} against ${fmt(planned)} income. You need to cut ${fmt(totalBudget-planned)}.`);
+  else if(planned&&totalBudget&&totalBudget<planned*0.95)add('blue','Money without a job',`${fmt(planned-totalBudget)} a month is not assigned. Unassigned money tends to get spent. Put it into Savings & investing.`);
+
+  for(const c of spendCats){
+    const sp=s.byCat[c.id]||0,b=+c.budget||0,p=s.projCat[c.id]||0;
+    if(b>0&&sp>b)add('red',`${c.name} is over budget`,`${fmt(sp)} spent vs ${fmt(b)} (${Math.round(sp/b*100)}%).`);
+    else if(b>0&&s.isCur&&c.kind!=='need'&&s.frac>0.2&&s.frac<0.97&&p>b*1.05){
+      const left=Math.max(0,b-sp),days=s.dim-s.day+1;
+      add('amber',`${c.name} is on pace to overspend`,`At this pace you land at ${fmt(p)} vs ${fmt(b)}. To stay on track: max ${fmt(left/days)} a day for the next ${days} days.`);
+    } else if(!b&&sp>0)add('amber',`No budget for ${c.name}`,`${fmt(sp)} spent with no limit set.`);
+    const prev=P.byCat[c.id]||0,cmp=s.isCur?p:sp;
+    if(prev>0&&(!s.isCur||s.frac>0.4)&&cmp>prev*1.3&&cmp-prev>50)add('amber',`${c.name} is trending up`,`${s.isCur?'Heading for':'Ended at'} ${fmt(cmp)} vs ${fmt(prev)} last month (+${Math.round((cmp/prev-1)*100)}%).`);
+  }
+  if(s.uncat>0)add('amber','Uncategorised spending',`${fmt(s.uncat)} has no category. Tap those items in Spending, or let the AI CFO categorise them.`);
+
+  if(s.income>0){
+    const spend=s.isCur?s.proj:s.spent,rate=(s.income-spend)/s.income*100;
+    if(rate<0)add('red','Spending more than you earn',`${s.isCur?'Projected':'Actual'} spend ${fmt(spend)} vs income ${fmt(s.income)}.`);
+    else if(rate<set.savingsTarget)add('amber',`Savings rate ${Math.round(rate)}% (target ${set.savingsTarget}%)`,`Free up ${fmt(s.income*set.savingsTarget/100-(s.income-spend))} this month to hit target.`);
+    else add('green',`Savings rate ${Math.round(rate)}%`,`On track vs your ${set.savingsTarget}% target. Make sure the surplus actually gets invested.`);
+    const wantsPct=(s.isCur?s.projWants:s.wants)/s.income*100,needsPct=(s.isCur?s.projNeeds:s.needs)/s.income*100;
+    if(wantsPct>30)add('amber',`Wants are ${Math.round(wantsPct)}% of income`,'Rule of thumb is about 30%. Eating out, going out, shopping and travel are where to look.');
+    if(needsPct>55)add('amber',`Fixed costs are ${Math.round(needsPct)}% of income`,'Above ~50% leaves little room. Renegotiate housing, bills and transport once a year.');
+    const sub=S.categories.find(c=>/subscri/i.test(c.name));
+    if(sub){const sp=s.isCur?(s.projCat[sub.id]||0):(s.byCat[sub.id]||0);if(sp>s.income*0.03)add('amber','Subscription creep',`${fmt(sp)} a month (${fmt(sp*12)} a year). Cancel anything unused in the last 30 days.`)}
+  }
+
+  // Safety net
+  const liquid=acc(['cash','savings']);
+  let ess=sum(S.categories.filter(c=>c.kind==='need'),c=>+c.budget||0);
+  if(!ess){const ms=[1,2,3].map(i=>stats(shiftMonth(m,-i)).needs).filter(x=>x>0);ess=ms.length?sum(ms)/ms.length:s.needs}
+  if(!S.accounts.length)add('blue','Add your balances','Go to Wealth and add your current account, savings and any debts so I can check your safety net.');
+  else if(ess>0){
+    const target=ess*set.efMonths,cover=liquid/ess;
+    if(liquid<target)add(cover<3?'red':'amber',`Safety net: ${cover.toFixed(1)} of ${set.efMonths} months`,`${fmt(target-liquid)} more in cash/savings covers ${set.efMonths} months of essentials (${fmt(ess)}/month). Build this before taking more investment risk.`);
+    else{const idle=liquid-target-ess;
+      if(idle>ess*0.5)add('blue','Idle cash opportunity',`About ${fmt(idle)} sits above your safety net plus a 1-month buffer. Inflation eats it. Invest it per your plan, or clear expensive debt first.`);
+      else add('green',`Safety net funded (${cover.toFixed(1)} months)`,'New savings can go to investing and goals.');}
+  }
+  for(const a of S.accounts.filter(a=>a.type==='debt'&&+a.balance>0)){
+    const r=+a.rate||0;
+    if(r>=7)add('red',`Expensive debt: ${a.name} at ${r}%`,`${fmt(a.balance)} costs ~${fmt(a.balance*r/100)} a year. Paying it off is a guaranteed ${r}% return. Do it before investing.`);
+    else if(!r)add('amber',`${a.name}: add the interest rate`,'Add the APR in Wealth so I can say whether to pay it off or invest.');
+  }
+
+  // Wealth and goal
+  const gp=goalPlan();
+  if(gp){
+    if(gp.onTrack)add('green','Net worth goal on track',`You save ~${fmt(gp.W.monthly)}/month; you need ${fmt(gp.required)}. Projected ${fmt(gp.projected)} by ${monthName(S.goal.date.slice(0,7))}.`);
+    else add('amber','Net worth goal off track',`You need ${fmt(gp.required)}/month invested but average ${fmt(gp.W.monthly)}. Gap: ${fmt(gp.gap)}/month. See Wealth for options.`);
+  } else if(S.holdings.length||S.accounts.length)add('blue','Set a net worth goal','Wealth tab: pick a target and date and I will tell you what to invest each month.');
+  const W=wealth();
+  if(W.value>0&&Math.abs(W.aggrShare-S.alloc.aggrPct)>5)add('amber','Portfolio needs rebalancing',`High-risk bucket is ${pct(W.aggrShare)} vs your ${S.alloc.aggrPct}% target. ${W.aggrShare>S.alloc.aggrPct?'Take some profits into the core index fund.':'Direct new money to the high-risk bucket, or accept the drift.'}`);
+
+  // Tax (Spain)
+  const T=S.tax,mo=new Date().getMonth()+1;
+  if(T.regime==='es'){
+    const foreign=sum(S.holdings.filter(h=>h.foreign!==false),h=>+h.value||0);
+    if(foreign>50000)add('amber','Modelo 720 likely required',`About ${fmt(foreign)} in securities at foreign brokers (Revolut included). Over €50,000 means filing Modelo 720 between 1 Jan and 31 Mar.`);
+    if(mo>=10){
+      const left=Math.max(0,1500-(+T.pensionYTD||0));
+      if(left>0)add('blue','Year-end tax saver: pension plan',`Contributing ${fmt(left)} more before 31 Dec cuts your IRPF by ~${fmt(left*T.marginal/100)} at your ${T.marginal}% marginal rate. Money is locked until retirement (or 10+ years), so only if it fits your plan.`);
+      const ty=taxYear(),U=unrealised();
+      if(ty.gains>0&&U.loss>0)add('blue','Harvest losses before 31 Dec',`You realised ${fmt(ty.gains)} in gains this year and hold ${fmt(U.loss)} in paper losses. Selling losers offsets gains. Wait 2 months before rebuying the same security or the loss is deferred.`);
+    }
+  }
+  const mp=movePlan();
+  if(mp&&mo>=1){
+    const U=unrealised();
+    if(T.regime!=='uae'&&U.gain>1000)add('violet','Before the UAE move',`You hold ${fmt(U.gain)} in unrealised gains (~${fmt(savingsTax(U.gain,'es'))} Spanish tax if sold now). Realising them in a year you are fully UAE resident could make them tax-free. Plan the date with an advisor.`);
+    if(T.regime==='uae'&&U.gain>1000)add('violet','Reset your cost basis before returning',`${fmt(U.gain)} of gains is untaxed while you are UAE resident. Spain taxes the full gain on future sales, so consider selling and rebuying before you become Spanish resident again.`);
+  }
+
+  // Habit
+  if(s.isCur){const last=S.tx.map(t=>t.date).sort().pop();if(last&&(Date.now()-new Date(last).getTime())/864e5>7)add('blue','Nothing logged for a week','Log recent spending or import a fresh bank CSV.')}
+  if(!s.isCur&&s.income>0){const left=s.income-s.spent-s.saved;if(left>20)add('blue',`${fmt(left)} left over from ${monthName(m)}`,'Sweep it into your investment plan before it gets spent.')}
+
+  const order={red:0,amber:1,violet:2,blue:3,green:4};F.sort((a,b)=>order[a.sev]-order[b.sev]);
+  const reds=F.filter(f=>f.sev==='red').length,ambers=F.filter(f=>f.sev==='amber').length;
+  return{F,s,score:Math.max(0,Math.min(100,100-reds*16-ambers*6))};
+}
+
+/* =========================================================
+   MARKDOWN (for AI answers)
+   ========================================================= */
+function md(t){
+  const lines=esc(t).split('\n');let h='',inList=false;
+  const inl=s=>s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*(?!\s)(.+?)\*/g,'$1<i>$2</i>').replace(/`(.+?)`/g,'<code>$1</code>');
+  for(const l of lines){
+    const li=l.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)/);
+    if(li){if(!inList){h+='<ul>';inList=true}h+='<li>'+inl(li[1])+'</li>';continue}
+    if(inList){h+='</ul>';inList=false}
+    if(/^#{1,2}\s/.test(l))h+='<h3>'+inl(l.replace(/^#+\s/,''))+'</h3>';
+    else if(/^#{3,}\s/.test(l))h+='<h4>'+inl(l.replace(/^#+\s/,''))+'</h4>';
+    else if(l.trim())h+='<p>'+inl(l)+'</p>';
+  }
+  if(inList)h+='</ul>';return h;
+}
+
+/* =========================================================
+   VIEWS
+   ========================================================= */
+let view='cfo',month=thisMonth();
+const TITLES={cfo:'Life CFO',budget:'Budget',tx:'Spending',wealth:'Wealth',tax:'Tax',ai:'AI CFO',settings:'Settings'};
+function render(){
+  $('#mLabel').textContent=monthName(month);
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  $('.month').style.display=['cfo','budget','tx'].includes(view)?'flex':'none';
+  $('#fab').style.display=['ai','cfo','settings'].includes(view)?'none':'';
+  $('#title').textContent=TITLES[view];
+  $('#view').innerHTML=V[view]();
+  if(view==='ai'){const c=$('#chatEnd');c&&c.scrollIntoView()}else window.scrollTo(0,0);
+}
+const V={
+cfo(){
+  const{F,s,score}=cfo(month),W=wealth();
+  const budgetSpend=sum(S.categories.filter(c=>c.kind!=='save'),c=>+c.budget||0),left=budgetSpend-s.spent;
+  const leftVal=budgetSpend?left:s.inc-s.spent;
+  const col=score==null?'rgba(255,255,255,.1)':score>=80?'#2ee59d':score>=55?'#ffb547':'#ff5d73';
+  const label=score==null?'Getting started':score>=80?'Healthy':score>=55?'Needs attention':'Action needed';
+  const n=sev=>F.filter(f=>f.sev===sev).length;
+  const daysLeft=s.dim-s.day+1;
+  let h=`<section class="hero">
+    <div class="hero-label">${budgetSpend?'Left to spend':'Net this month'} · ${monthName(month)}</div>
+    <div class="hero-num ${leftVal<0?'neg':''}">${money(leftVal)}</div>
+    <div class="hero-sub">${budgetSpend&&s.isCur&&left>0?`≈ ${fmt(left/daysLeft)} a day · ${daysLeft} days left`:`Spent ${fmt(s.spent)} of ${fmt(budgetSpend||s.income)}`}</div>
+    <div class="actions">
+      <button class="act primary" onclick="openTx()"><i>${I.plus}</i>Add</button>
+      <button class="act" onclick="$('#fileCSV').click()"><i>${I.imp}</i>Import</button>
+      <button class="act" onclick="aiQuick('review')"><i>${I.ai}</i>Ask AI</button>
+      <button class="act" onclick="view='wealth';render()"><i>${I.goal}</i>Goal</button>
+    </div></section>
+  <div class="strip">
+    <div class="kpi"><span class="muted small">Income${s.inc?'':' (plan)'}</span><b>${fmt(s.income)}</b></div>
+    <div class="kpi"><span class="muted small">Spent</span><b>${fmt(s.spent)}</b></div>
+    <div class="kpi"><span class="muted small">Invested</span><b>${fmt(s.saved)}</b></div>
+    <div class="kpi"><span class="muted small">Net worth</span><b class="grad-text">${fmt(W.nw)}</b></div>
+  </div>
+  <div class="card glow" style="margin-top:14px"><div class="score"><div class="ring" style="background:conic-gradient(${col} ${(score??0)*3.6}deg,rgba(255,255,255,.07) 0);box-shadow:0 0 30px ${col}33"><span>${score??'–'}</span></div>
+  <div><div class="muted small">Financial health</div><div style="font-size:20px;font-weight:750;letter-spacing:-.3px">${label}</div>
+  <div class="row small" style="justify-content:flex-start;gap:6px;margin-top:6px;flex-wrap:wrap">${n('red')?`<span class="pill" style="color:var(--red)">${n('red')} urgent</span>`:''}${n('amber')?`<span class="pill" style="color:var(--amber)">${n('amber')} warnings</span>`:''}${n('blue')+n('violet')?`<span class="pill" style="color:var(--blue)">${n('blue')+n('violet')} ideas</span>`:''}</div></div></div></div>
+  <h2>CFO briefing</h2><div class="card">${F.map(f=>`<div class="flag"><div class="ico ${f.sev}">${SEV_ICON[f.sev]}</div><div><b>${esc(f.title)}</b><div class="muted small">${esc(f.detail)}</div></div></div>`).join('')||'<div class="empty">All clear.</div>'}</div>`;
+  const top=S.categories.filter(c=>c.kind!=='save'&&(s.byCat[c.id]||0)>0).sort((a,b)=>(s.byCat[b.id]||0)-(s.byCat[a.id]||0)).slice(0,5);
+  if(top.length){const mx=s.byCat[top[0].id];h+=`<h2>Where the money went</h2><div class="card">${top.map(c=>`<div class="cat">${av(c.name)}<div class="grow"><div class="row"><span>${esc(c.name)}</span><b>${fmt(s.byCat[c.id])}</b></div><div class="bar"><i style="width:${s.byCat[c.id]/mx*100}%"></i></div></div></div>`).join('')}</div>`}
+  return h;
+},
+budget(){
+  const s=stats(month),planned=+S.settings.income||0,total=sum(S.categories,c=>+c.budget||0);
+  let h=`<div class="card glow"><div class="muted small">Unassigned this month</div><div class="big ${planned-total<0?'neg':''}">${money(planned-total,0)}</div>
+  <div class="row small" style="margin-top:8px"><span class="muted">Income ${fmt(planned)}</span><span class="muted">Budgeted ${fmt(total)}</span></div>
+  ${planned?`<div class="bar"><i style="width:${Math.min(100,total/planned*100)}%;${total>planned?'background:var(--red)':''}"></i></div>`:'<div class="note">Set your income in Settings (gear icon).</div>'}</div>`;
+  for(const[k,label]of[['need','Needs'],['want','Wants'],['save','Savings & investing']]){
+    const cats=S.categories.filter(c=>c.kind===k);if(!cats.length)continue;
+    h+=`<h2>${label}</h2><div class="card">`+cats.map(c=>{
+      const sp=s.byCat[c.id]||0,b=+c.budget||0,p=b?sp/b*100:0;
+      const bg=k==='save'?'var(--green)':p>100?'var(--red)':p>85?'var(--amber)':'';
+      return`<div class="cat" onclick="editCat('${c.id}')">${av(c.name)}<div class="grow"><div class="row"><span>${esc(c.name)}</span><span><b>${fmt(sp)}</b> <span class="muted small">/ ${b?fmt(b):'no budget'}</span></span></div><div class="bar"><i style="width:${Math.min(100,p)}%;${bg?'background:'+bg:''}"></i></div></div></div>`}).join('')+`</div>`;
+  }
+  return h+`<button class="btn ghost" onclick="editCat()">+ Add category</button><div class="note" style="text-align:center">Tap a category to change its budget</div>`;
+},
+tx(){
+  const C=catById(),list=S.tx.filter(t=>t.date.slice(0,7)===month).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!list.length)return`<div class="card empty">No transactions in ${monthName(month)}.<br>Tap + to add one, or import a bank CSV in Settings.</div>`;
+  const s=stats(month);
+  const days={};list.forEach(t=>(days[t.date]=days[t.date]||[]).push(t));
+  return`<div class="strip" style="margin-bottom:4px"><div class="kpi"><span class="muted small">Spent</span><b>${fmt(s.spent)}</b></div><div class="kpi"><span class="muted small">Income</span><b class="pos">${fmt(s.inc)}</b></div><div class="kpi"><span class="muted small">Transactions</span><b>${list.length}</b></div></div>`+
+  Object.entries(days).map(([d,ts])=>`<h2>${new Date(d+'T12:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'short'})} <span class="muted">${fmt(sum(ts.filter(t=>t.type!=='income'),t=>t.amount))}</span></h2><div class="card">`+ts.map(t=>{const cn=C[t.cat]?.name||'Uncategorised',inc=t.type==='income';return`<div class="tx" onclick="openTx('${t.id}')">${av(cn,inc)}<div class="grow"><div>${esc(t.note||(inc?'Income':cn))}</div><div class="muted small">${inc?'Income':esc(cn)}</div></div><div class="amt-r ${inc?'pos':''}">${inc?'+':'−'}${money(t.amount)}</div></div>`}).join('')+`</div>`).join('');
+},
+wealth(){
+  const W=wealth(),gp=goalPlan(),A=S.alloc,G=S.goal;
+  let h=`<section class="hero" style="padding-bottom:18px"><div class="hero-label">Net worth</div><div class="hero-num grad-text">${money(W.nw,0)}</div><div class="hero-sub">${W.value?`Investments ${(W.value-W.cost)>=0?'up':'down'} ${fmt(Math.abs(W.value-W.cost))} (${pct((W.value-W.cost)/(W.cost||1)*100,1)})`:'Add your accounts and investments below'}</div></section>
+  <div class="card"><div class="grid3 small muted"><div>Cash<br><b style="color:var(--text)">${fmt(W.cash)}</b></div><div>Invested<br><b style="color:var(--text)">${fmt(W.invested)}</b></div><div>Debt<br><b style="color:var(--text)">${fmt(W.debt)}</b></div></div></div>`;
+
+  // Goal
+  h+=`<h2>Net worth goal</h2><div class="card">`;
+  if(!gp)h+=`<div class="muted">Set a target and a date. I'll work out how much to invest each month and track you against it.</div>`;
+  else{
+    h+=`<div class="row"><div><div class="muted small">Target</div><b style="font-size:20px">${fmt(G.target)}</b><div class="muted small">by ${monthName(G.date.slice(0,7))} · ${gp.n} months</div></div>
+      <span class="pill" style="background:${gp.onTrack?'#173b2c':'#3d3016'};color:${gp.onTrack?'var(--green)':'var(--amber)'}">${gp.onTrack?'On track':'Off track'}</span></div>
+      ${chart(gp)}
+      <div class="kpis"><div class="kpi"><span class="muted small">Needed / month</span><b>${fmt(gp.required)}</b></div><div class="kpi"><span class="muted small">You save / month</span><b>${fmt(W.monthly)}</b></div></div>
+      <div class="note">Assumes ${pct(W.blended,1)} a year blended return (core ${G.coreReturn}%, high-risk ${A.aggrReturn}%), cash not growing. Projection at your current pace: <b>${fmt(gp.projected)}</b>. Returns are not guaranteed; markets can fall 30%+ in a bad year.</div>`;
+    if(!gp.onTrack){const n=gp.n,r=W.blended/100/12,gap=gp.gap;h+=`<div class="note"><b>Ways to close the ${fmt(gap)}/month gap:</b> cut wants spending by that amount, push the date out, or lower the target. Raising expected returns on paper does not count.</div>`}
+  }
+  h+=`<button class="btn ghost" onclick="editGoal()">${gp?'Edit goal':'Set goal'}</button></div>`;
+
+  // Allocation
+  const coreT=100-A.aggrPct,needCap=A.aggrIncome*12/(A.aggrReturn/100),needCapGross=needCap/(1-0.21);
+  h+=`<h2>Allocation plan</h2><div class="card">
+   <div class="row small"><span><span class="dot" style="display:inline-block;background:var(--accent);margin:0 6px 0 0"></span>Core (S&P 500 / world index)</span><b>${pct(100-W.aggrShare)} <span class="muted">/ ${coreT}%</span></b></div>
+   <div class="row small" style="margin-top:6px"><span><span class="dot" style="display:inline-block;background:var(--violet);margin:0 6px 0 0"></span>High-risk (stocks, trading)</span><b>${pct(W.aggrShare)} <span class="muted">/ ${A.aggrPct}%</span></b></div>
+   <div class="bar" style="height:12px"><i style="width:${W.value?100-W.aggrShare:coreT}%;border-radius:0"></i><i style="width:${W.value?W.aggrShare:A.aggrPct}%;background:var(--violet);border-radius:0"></i></div>
+   ${W.monthly>0?`<div class="note">Of the ~${fmt(W.monthly)} you save each month: put about <b>${fmt(W.monthly*coreT/100)}</b> into the core and <b>${fmt(W.monthly*A.aggrPct/100)}</b> into high-risk, on the same day each month. Buying on a fixed schedule beats trying to time the market for most people.</div>`:''}
+   <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>High-risk income target: ${fmt(A.aggrIncome)}/month</b>
+   <div class="note">At ${A.aggrReturn}% a year you need about <b>${fmt(needCap)}</b> in the high-risk bucket (≈${fmt(needCapGross)} to net it after ~21% Spanish tax). You have <b>${fmt(W.aggr)}</b>, which at ${A.aggrReturn}% earns ~${fmt(W.aggr*A.aggrReturn/100/12)}/month on average. Sustained ${A.aggrReturn}% is well above what most active traders achieve; many lose money. Treat this money as money you could lose.</div></div>
+   <button class="btn ghost" onclick="editAlloc()">Edit allocation</button></div>`;
+
+  // Holdings
+  h+=`<h2>Investments</h2><div class="card">`;
+  if(!S.holdings.length)h+=`<div class="muted">Add what you hold (index funds, stocks). Update values monthly, or ask the AI CFO to look up prices.</div>`;
+  for(const b of['core','aggr']){const hs=S.holdings.filter(x=>x.bucket===b);if(!hs.length)continue;
+    h+=`<div class="muted small" style="margin:8px 0 2px">${b==='core'?'Core':'High-risk'}</div>`+hs.map(x=>{const g=(+x.value||0)-(+x.cost||0),gp=x.cost?g/x.cost*100:0;return`<div class="tx" onclick="editHolding('${x.id}')"><div class="av" style="background:${b==='core'?'#6a7dff':'#b583ff'}22;border-color:${b==='core'?'#6a7dff':'#b583ff'}44;font-size:12px;font-weight:800;color:${b==='core'?'#9aa8ff':'#d0b0ff'}">${esc((x.ticker||x.name).slice(0,4).toUpperCase())}</div><div class="grow"><div>${esc(x.name)}</div><div class="muted small">cost ${fmt(x.cost)}${x.updated?' · updated '+esc(x.updated):''}</div></div><div class="amt-r"><b>${fmt(x.value)}</b><div class="small ${g>=0?'pos':'neg'}">${g>=0?'+':''}${fmt(g)} (${pct(gp,1)})</div></div></div>`}).join('')}
+  h+=`<button class="btn ghost" onclick="editHolding()">+ Add investment</button></div>`;
+
+  // Accounts
+  const T={cash:'Current accounts',savings:'Savings',invest:'Other investments (pension, etc.)',debt:'Debt'};
+  h+=`<h2>Accounts</h2><div class="card">`;
+  if(!S.accounts.length)h+=`<div class="muted">Add your bank accounts, savings and debts.</div>`;
+  for(const k of Object.keys(T)){const a=S.accounts.filter(x=>x.type===k);if(!a.length)continue;
+    h+=`<div class="muted small" style="margin:8px 0 2px">${T[k]}</div>`+a.map(x=>`<div class="tx" onclick="editAcc('${x.id}')">${`<div class="av" style="background:${({cash:'#4fb3ff',savings:'#2ee59d',invest:'#b583ff',debt:'#ff5d73'})[x.type]}1f">${({cash:'💳',savings:'🏦',invest:'📊',debt:'⚠️'})[x.type]}</div>`}<div class="grow"><div>${esc(x.name)}</div><div class="muted small">${x.type==='debt'&&x.rate?x.rate+'% APR · ':''}updated ${esc(x.updated||'')}</div></div><div class="amt-r ${x.type==='debt'?'neg':''}">${x.type==='debt'?'−':''}${fmt(x.balance)}</div></div>`).join('')}
+  return h+`<button class="btn ghost" onclick="editAcc()">+ Add account</button></div>`;
+},
+tax(){
+  const T=S.tax,ty=taxYear(),U=unrealised(),mp=movePlan(),y=thisYear();
+  let h=`<div class="card"><label style="margin-top:0">Where are you tax resident this year?</label>
+  <div class="seg">${Object.entries(REGIMES).map(([k,l])=>`<button class="${T.regime===k?'on':''}" onclick="S.tax.regime='${k}';save();render()">${l}</button>`).join('')}</div>
+  <div class="note">${{es:'Spain taxes your worldwide income. Investment income and gains are taxed separately from salary at 19% to 30%.',beckham:'Special inbound regime: salary taxed at a flat 24% (up to €600k). Investment income from outside Spain is generally not taxed in Spain. Lasts the arrival year plus 5 more.',uae:'No personal income tax on salary, dividends, interest or gains. Spain stops taxing you only once you are no longer Spanish resident for the whole calendar year.'}[T.regime]}</div></div>`;
+
+  // Comparison
+  const rows=[['Realised gains '+y,ty.gains],['Dividends '+y,ty.div],['Interest '+y,ty.int]];
+  h+=`<h2>This year's investment tax</h2><div class="card"><table><tr><th></th><th>Amount</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${fmt(r[1])}</td></tr>`).join('')}</table>
+  <table style="margin-top:10px"><tr><th>Tax if resident in</th><th>This year</th><th>If you sold all today</th></tr>
+  ${Object.entries(REGIMES).map(([k,l])=>`<tr><td>${l}${k===T.regime?' ●':''}</td><td>${fmt(savingsTax(ty.base,k))}</td><td>${fmt(savingsTax(ty.base+U.gain-U.loss,k))}</td></tr>`).join('')}</table>
+  <div class="note">Spain 2026 savings scale: 19% to €6k, 21% to €50k, 23% to €200k, 27% to €300k, 30% above. Losses offset gains; unused net losses carry forward 4 years. Beckham column assumes the income is Spanish-source; foreign-source is generally not taxed.</div>
+  <div class="grid2"><button class="btn ghost" onclick="editTaxLog()">+ Log gain / dividend</button><button class="btn ghost" onclick="view='wealth';render()">Holdings</button></div>
+  ${ty.L.length?`<div style="margin-top:10px">${ty.L.sort((a,b)=>b.date.localeCompare(a.date)).map(t=>`<div class="tx" onclick="editTaxLog('${t.id}')"><div><div>${esc(t.note||t.type)}</div><div class="muted small">${t.type} · ${t.date}</div></div><b class="${t.amount<0?'neg':''}">${fmt(t.amount)}</b></div>`).join('')}</div>`:''}</div>`;
+
+  // Spain levers
+  if(T.regime!=='uae'){
+    const left=Math.max(0,1500-(+T.pensionYTD||0));
+    h+=`<h2>Spain: legal ways to pay less</h2><div class="card">
+    <div class="flag"><div class="ico blue">${SEV_ICON.blue}</div><div><b>Pension plan deduction</b><div class="muted small">Up to €1,500/year of personal contributions reduce your taxable salary (up to €10,000 with an employer plan). At your ~${T.marginal}% marginal rate the remaining ${fmt(left)} would save ~${fmt(left*T.marginal/100)}. Trade-off: locked until retirement or after 10 years; taxed as salary on the way out. It also leaves with you if you move.</div></div></div>
+    <div class="flag"><div class="ico blue">${SEV_ICON.blue}</div><div><b>Funds over stocks for rebalancing</b><div class="muted small">Switching between investment funds (fondos de inversión, not ETFs) does not trigger tax in Spain. Selling ETFs or stocks does. Holding the core in a Spanish-registered index fund lets you rebalance tax-free.</div></div></div>
+    <div class="flag"><div class="ico blue">${SEV_ICON.blue}</div><div><b>Harvest losses in Q4</b><div class="muted small">Losses on high-risk positions offset gains. Do not rebuy the same security within 2 months or the loss is deferred.</div></div></div>
+    <div class="flag"><div class="ico amber">${SEV_ICON.amber}</div><div><b>Foreign assets over €50,000</b><div class="muted small">Securities at foreign brokers (Revolut Securities is Lithuanian) above €50k require Modelo 720 by 31 March. Crypto abroad over €50k: Modelo 721.</div></div></div>
+    <label>Your marginal IRPF rate (salary)</label><input type="number" inputmode="decimal" value="${T.marginal}" onchange="S.tax.marginal=num(this.value);save();render()">
+    <label>Pension contributions so far in ${y}</label><input type="number" inputmode="decimal" value="${T.pensionYTD||''}" placeholder="0" onchange="S.tax.pensionYTD=num(this.value);save();render()">
+    </div>`;
+  }
+
+  // Move plan
+  h+=`<h2>Spain → UAE → Spain plan</h2><div class="card">
+  <div class="grid2"><div><label style="margin-top:0">Move to UAE (month)</label><input type="month" value="${T.moveDate}" onchange="S.tax.moveDate=this.value;save();render()"></div>
+  <div><label style="margin-top:0">Back to Spain (month)</label><input type="month" value="${T.returnDate}" onchange="S.tax.returnDate=this.value;save();render()"></div></div>`;
+  if(mp){
+    h+=`<div class="kpis"><div class="kpi"><span class="muted small">First UAE-only tax year</span><b>${mp.firstNR}</b></div><div class="kpi"><span class="muted small">Beckham on return from</span><b>${mp.beckhamYear}</b></div></div>
+    ${mp.m>6?`<div class="note neg">Leaving in month ${mp.m} likely means more than 183 days in Spain in ${mp.y}, so you stay Spanish resident (and taxed on everything) for all of ${mp.y}. Leaving by June can make ${mp.y} your first non-resident year.</div>`:''}
+    ${mp.ret?`<div class="note">${mp.ret.beckham?`Returning in ${mp.ret.year}: you would have been out 5 full tax years, so you could qualify for Beckham (24% flat on salary for 6 years) if you return for a job.`:`Returning in ${mp.ret.year} is before ${mp.beckhamYear}: you would <b>not</b> qualify for Beckham and go straight back to normal Spanish rates.`}</div>`:''}`;
+  }
+  h+=`<div class="flag" style="margin-top:12px"><div class="ico violet">${SEV_ICON.violet}</div><div><b>Leaving</b><div class="muted small">Spain decides residency per calendar year: more than 183 days in Spain, or your main business/economic interests there, or spouse and minor children living there. Cut those ties and get a UAE Tax Residency Certificate (183+ days, or 90+ with a residence visa and a home or job). Spain's exit tax only hits very large holdings (shares worth over €4m, or €1m in a company you own 25%+ of).</div></div></div>
+  <div class="flag"><div class="ico violet">${SEV_ICON.violet}</div><div><b>While in the UAE</b><div class="muted small">0% personal tax. Watch US dividends: with no US-UAE tax treaty, US stocks withhold 30% (15% from Spain). Prefer accumulating Irish-domiciled ETFs. Spanish-source income (e.g. renting a Spanish flat) is still taxed in Spain.</div></div></div>
+  <div class="flag"><div class="ico violet">${SEV_ICON.violet}</div><div><b>Before coming back</b><div class="muted small">Spain taxes gains from your original purchase price, even gains made while you lived in the UAE. Selling and rebuying before you become Spanish resident again resets your cost basis tax-free.</div></div></div>
+  <div class="note">This is general information, checked Nov 2026, not tax advice. Rules change; confirm your move with a Spanish tax advisor.</div></div>`;
+  return h;
+},
+ai(){
+  const A=S.ai;
+  if(!A.key)return`<div class="card"><b>Connect your Claude API key</b><div class="muted small" style="margin-top:6px">Get one at console.anthropic.com › API keys. It stays on this phone and is only sent to Anthropic. Set a monthly spend limit in the Console so a leaked key can't cost much.</div>
+  <label>API key</label><input id="aiKey" type="password" placeholder="sk-ant-..." autocomplete="off"><button class="btn" onclick="S.ai.key=$('#aiKey').value.trim();save();render()">Save key</button></div>
+  <div class="card small muted">What the AI CFO does: monthly reviews, answers questions like "can I afford this?", live market research before you buy, Spain vs UAE tax scenarios, and it learns your habits (going out, travel, recurring spend) into a profile you can read and edit.</div>`;
+  const stale=!A.profileUpdated||(Date.now()-new Date(A.profileUpdated).getTime())/864e5>30;
+  let h=`<div class="chips">
+    <button class="chip" onclick="aiQuick('review')">Monthly review</button>
+    <button class="chip" onclick="aiQuick('goal')">Hit my goal faster</button>
+    <button class="chip" onclick="aiQuick('market')">Good time to buy S&P?</button>
+    <button class="chip" onclick="aiQuick('portfolio')">Review my portfolio</button>
+    <button class="chip" onclick="aiQuick('tax')">Spain vs UAE for me</button>
+    <button class="chip" onclick="aiQuick('afford')">Can I afford…</button>
+    <button class="chip" onclick="aiCategorise()">Categorise my spending</button>
+  </div>
+  ${stale&&S.tx.length?`<div class="card"><b>${A.profile?'Your habit profile is over a month old':'Let me learn your habits'}</b><div class="muted small">I'll read your transactions and write down patterns (going out, travel, recurring costs, trends). You can edit it.</div><button class="btn" id="learnBtn" onclick="aiLearn()">${A.profile?'Refresh profile':'Learn my habits'}</button></div>`:''}`;
+  h+=`<div id="chat">${A.chat.length?A.chat.map(m=>`<div class="msg ${m.role==='user'?'u':'a'}">${m.role==='user'?esc(m.content):md(m.content)}</div>`).join(''):'<div class="empty">Ask your CFO anything about your money.</div>'}<div id="chatEnd"></div></div>
+  <div class="composer"><textarea id="q" placeholder="Ask your CFO…" rows="1"></textarea><button class="btn" id="sendBtn" onclick="aiAsk()" aria-label="Send">${I.send}</button></div>
+  <div class="row small muted" style="margin-top:4px"><span>Live web search ${A.web?'on':'off'} · ${esc(A.model)}</span><span><a href="#" onclick="event.preventDefault();openProfile()">Habit profile</a> · <a href="#" onclick="event.preventDefault();S.ai.chat=[];save();render()">Clear</a></span></div>`;
+  return h;
+},
+settings(){
+  const st=S.settings,A=S.ai;
+  return`<div class="card">
+  <label style="margin-top:0">Monthly take-home income</label><input type="number" inputmode="decimal" id="sIncome" value="${st.income||''}" placeholder="e.g. 3200">
+  <div class="grid2"><div><label>Savings target %</label><input type="number" inputmode="numeric" id="sTarget" value="${st.savingsTarget}"></div>
+  <div><label>Safety net (months)</label><input type="number" inputmode="numeric" id="sEF" value="${st.efMonths}"></div></div>
+  <label>Currency</label><select id="sCur">${['EUR','AED','GBP','USD','CHF'].map(c=>`<option ${c===st.currency?'selected':''}>${c}</option>`).join('')}</select>
+  <button class="btn" onclick="saveSettings()">Save settings</button></div>
+  <h2>AI CFO</h2><div class="card">
+  <label style="margin-top:0">Claude API key</label><input id="sKey" type="password" value="${esc(A.key)}" placeholder="sk-ant-..." autocomplete="off">
+  <label>Model</label><select id="sModel">${[['claude-sonnet-5-5','Sonnet 5.5 (best balance)'],['claude-haiku-5-5','Haiku 5.5 (cheapest)'],['claude-opus-5-5','Opus 5.5 (deepest)']].map(([v,l])=>`<option value="${v}" ${A.model===v?'selected':''}>${l}</option>`).join('')}</select>
+  <label>Live web search (market news, prices, tax updates)</label><select id="sWeb"><option value="1" ${A.web?'selected':''}>On</option><option value="0" ${!A.web?'selected':''}>Off</option></select>
+  <label>What the AI sees</label><select id="sTx"><option value="1" ${A.allowTx?'selected':''}>Full transactions (last 90 days) + summaries</option><option value="0" ${!A.allowTx?'selected':''}>Summaries only</option></select>
+  <button class="btn" onclick="saveAI()">Save AI settings</button></div>
+  <h2>Import from your bank</h2><div class="card"><div class="muted small">Export a CSV statement (Revolut: Account › Statement › Excel/CSV) and pick it here. I auto-categorise and skip duplicates.</div>
+  <button class="btn ghost" onclick="$('#fileCSV').click()">Import bank CSV</button></div>
+  <h2>Auto-categorise rules</h2><div class="card"><textarea class="mono" id="sRules">${esc(S.rules)}</textarea><button class="btn ghost" onclick="S.rules=$('#sRules').value;save();toast('Rules saved')">Save rules</button></div>
+  <h2>Backup</h2><div class="card"><div class="muted small">Your data lives only on this phone. Export a backup now and then. Backups do not include your API key.${S.updated?' Last saved: '+new Date(S.updated).toLocaleString():''}</div>
+  <div class="grid2"><button class="btn ghost" onclick="exportJSON()">Export backup</button><button class="btn ghost" onclick="$('#fileJSON').click()">Restore backup</button></div>
+  <button class="btn danger" onclick="ask('Delete ALL data on this device? Export a backup first if unsure.',()=>{S=defaults();save();render();toast('Reset')})">Reset everything</button></div>`;
+}};
+
+function chart(gp){
+  const W=gp.W,n=gp.n,w=320,h=120,pad=4,inv=W.invested-W.debt;
+  const pts=k=>Array.from({length:n+1},(_,i)=>fv(inv,W.cash,k,W.blended,i));
+  const cur=pts(W.monthly),need=pts(gp.required),max=Math.max(+S.goal.target,cur[n],need[n])*1.05,min=Math.min(0,W.nw);
+  const X=i=>pad+i/n*(w-2*pad),Y=v=>h-pad-(v-min)/(max-min)*(h-2*pad);
+  const path=a=>a.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join('');
+  return`<svg class="chart" viewBox="0 0 ${w} ${h+14}" width="100%" style="margin-top:12px">
+  <line x1="${pad}" x2="${w-pad}" y1="${Y(+S.goal.target)}" y2="${Y(+S.goal.target)}" stroke="var(--line)" stroke-dasharray="4 4"/>
+  <path d="${path(need)}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <path d="${path(cur)}" fill="none" stroke="url(#ng)" stroke-width="3" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(140,110,255,.6))"/>
+  <circle cx="${X(n)}" cy="${Y(cur[n])}" r="3.5" fill="var(--accent)"/>
+  <text x="${pad}" y="${h+12}">now</text><text x="${w-pad}" y="${h+12}" text-anchor="end">${monthName(S.goal.date.slice(0,7))}</text>
+  <text x="${w-pad}" y="${Y(+S.goal.target)-4}" text-anchor="end">target</text></svg>
+  <div class="small muted"><span style="color:var(--accent)">━</span> your current pace · <span>┅</span> pace needed</div>`;
+}
+
+/* =========================================================
+   SHEETS / FORMS
+   ========================================================= */
+function openSheet(html){$('#panel').innerHTML=html;$('#sheet').classList.add('open')}
+function closeSheet(){$('#sheet').classList.remove('open')}
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
+let _ask=null;
+function ask(msg,fn){_ask=fn;openSheet(`<div style="font-size:17px;font-weight:600;margin-bottom:6px">Are you sure?</div><div class="muted">${esc(msg)}</div><button class="btn danger" onclick="closeSheet();_ask&&_ask()">Yes, continue</button><button class="btn ghost" onclick="closeSheet()">Cancel</button>`)}
+const btns=(id,del)=>`<button class="btn" onclick="${id}">Save</button>${del?`<button class="btn danger" onclick="${del}">Delete</button>`:''}<button class="btn ghost" onclick="closeSheet()">Cancel</button>`;
+
+let txType='expense';
+function openTx(id){
+  const t=id?S.tx.find(x=>x.id===id):null;txType=t?t.type:'expense';
+  const opts=S.categories.map(c=>`<option value="${c.id}" ${t&&t.cat===c.id?'selected':''}>${esc(c.name)}</option>`).join('');
+  openSheet(`<div class="seg"><button id="tE" onclick="setType('expense')">Expense</button><button id="tI" onclick="setType('income')">Income</button></div>
+  <label>Amount</label><input class="amt" id="fAmt" type="number" inputmode="decimal" step="0.01" placeholder="0" value="${t?t.amount:''}">
+  <div id="catWrap"><label>Category</label><select id="fCat">${t&&!catById()[t.cat]?'<option value="">Uncategorised</option>':''}${opts}</select></div>
+  <div class="grid2"><div><label>Date</label><input type="date" id="fDate" value="${t?t.date:(month===thisMonth()?today():month+'-01')}"></div>
+  <div><label>Note</label><input id="fNote" placeholder="optional" value="${esc(t?t.note:'')}"></div></div>
+  ${btns(`saveTx('${id||''}')`,t?`delTx('${id}')`:'')}`);
+  setType(txType);if(!t)setTimeout(()=>$('#fAmt').focus(),80);
+}
+function setType(t){txType=t;$('#tE').classList.toggle('on',t==='expense');$('#tI').classList.toggle('on',t==='income');$('#catWrap').style.display=t==='income'?'none':''}
+function saveTx(id){
+  const amount=Math.abs(num($('#fAmt').value));if(!amount)return toast('Enter an amount');
+  const rec={type:txType,amount,cat:txType==='income'?null:$('#fCat').value,date:$('#fDate').value||today(),note:$('#fNote').value.trim()};
+  if(id)Object.assign(S.tx.find(x=>x.id===id),rec);else S.tx.push({id:uid(),...rec});
+  save();closeSheet();month=rec.date.slice(0,7);render();toast(id?'Updated':'Added');
+}
+function delTx(id){S.tx=S.tx.filter(x=>x.id!==id);save();closeSheet();render();toast('Deleted')}
+
+function editCat(id){
+  const c=id?S.categories.find(x=>x.id===id):null;
+  openSheet(`<label style="margin-top:0">Category name</label><input id="cName" value="${esc(c?c.name:'')}">
+  <label>Monthly budget</label><input id="cBud" type="number" inputmode="decimal" value="${c&&c.budget?c.budget:''}" placeholder="0">
+  <label>Type</label><select id="cKind">${[['need','Need (fixed / essential)'],['want','Want (discretionary)'],['save','Savings & investing']].map(([k,l])=>`<option value="${k}" ${c&&c.kind===k?'selected':''}>${l}</option>`).join('')}</select>
+  ${btns(`saveCat('${id||''}')`,c?`delCat('${id}')`:'')}`);
+}
+function saveCat(id){
+  const name=$('#cName').value.trim();if(!name)return toast('Name it');
+  const rec={name,budget:num($('#cBud').value),kind:$('#cKind').value};
+  if(id)Object.assign(S.categories.find(x=>x.id===id),rec);else S.categories.push({id:uid(),...rec});
+  save();closeSheet();render();
+}
+function delCat(id){ask('Delete this category? Its transactions become uncategorised.',()=>{S.categories=S.categories.filter(x=>x.id!==id);save();render()})}
+
+function editAcc(id){
+  const a=id?S.accounts.find(x=>x.id===id):null;
+  openSheet(`<label style="margin-top:0">Account name</label><input id="aName" value="${esc(a?a.name:'')}" placeholder="e.g. Revolut current">
+  <label>Type</label><select id="aType" onchange="$('#rateWrap').style.display=this.value==='debt'?'':'none'">${[['cash','Current account'],['savings','Savings'],['invest','Other investment (pension plan, etc.)'],['debt','Debt (card, loan)']].map(([k,l])=>`<option value="${k}" ${a&&a.type===k?'selected':''}>${l}</option>`).join('')}</select>
+  <label>Balance${a&&a.type==='debt'?' owed':''}</label><input id="aBal" type="number" inputmode="decimal" value="${a?a.balance:''}">
+  <div id="rateWrap" style="display:${a&&a.type==='debt'?'':'none'}"><label>Interest rate (APR %)</label><input id="aRate" type="number" inputmode="decimal" value="${a&&a.rate?a.rate:''}"></div>
+  ${btns(`saveAcc('${id||''}')`,a?`S.accounts=S.accounts.filter(x=>x.id!=='${id}');save();closeSheet();render()`:'')}`);
+}
+function saveAcc(id){
+  const name=$('#aName').value.trim();if(!name)return toast('Name it');
+  const rec={name,type:$('#aType').value,balance:Math.abs(num($('#aBal').value)),rate:num($('#aRate')?.value||0),updated:today()};
+  if(id)Object.assign(S.accounts.find(x=>x.id===id),rec);else S.accounts.push({id:uid(),...rec});
+  save();closeSheet();render();
+}
+
+function editHolding(id){
+  const x=id?S.holdings.find(h=>h.id===id):null;
+  openSheet(`<label style="margin-top:0">Name</label><input id="hName" value="${esc(x?x.name:'')}" placeholder="e.g. S&P 500 index fund">
+  <div class="grid2"><div><label>Ticker (optional)</label><input id="hTick" value="${esc(x?x.ticker:'')}" placeholder="VUAA, NVDA"></div>
+  <div><label>Bucket</label><select id="hBucket"><option value="core" ${x&&x.bucket==='core'?'selected':''}>Core</option><option value="aggr" ${x&&x.bucket==='aggr'?'selected':''}>High-risk</option></select></div></div>
+  <div class="grid2"><div><label>Current value</label><input id="hVal" type="number" inputmode="decimal" value="${x?x.value:''}"></div>
+  <div><label>Total invested (cost)</label><input id="hCost" type="number" inputmode="decimal" value="${x?x.cost:''}"></div></div>
+  <label>Held at a foreign broker? (Revolut, IBKR, Trade Republic…)</label><select id="hFor"><option value="1" ${!x||x.foreign!==false?'selected':''}>Yes</option><option value="0" ${x&&x.foreign===false?'selected':''}>No, Spanish broker</option></select>
+  <button class="btn" onclick="saveHolding('${id||''}')">Save</button>
+  ${x?`<button class="btn ghost" onclick="sellHolding('${id}')">I sold it (log the gain for tax)</button><button class="btn danger" onclick="S.holdings=S.holdings.filter(h=>h.id!=='${id}');save();closeSheet();render()">Delete</button>`:''}
+  <button class="btn ghost" onclick="closeSheet()">Cancel</button>`);
+}
+function saveHolding(id){
+  const name=$('#hName').value.trim();if(!name)return toast('Name it');
+  const rec={name,ticker:$('#hTick').value.trim().toUpperCase(),bucket:$('#hBucket').value,value:num($('#hVal').value),cost:num($('#hCost').value),foreign:$('#hFor').value==='1',updated:today()};
+  if(id)Object.assign(S.holdings.find(h=>h.id===id),rec);else S.holdings.push({id:uid(),...rec});
+  save();closeSheet();render();
+}
+function sellHolding(id){
+  const x=S.holdings.find(h=>h.id===id);const proceeds=num($('#hVal').value)||x.value,g=proceeds-(num($('#hCost').value)||x.cost);
+  S.taxlog.push({id:uid(),date:today(),type:'gain',amount:Math.round(g*100)/100,note:'Sold '+x.name});
+  S.holdings=S.holdings.filter(h=>h.id!==id);save();closeSheet();render();toast(`Logged ${g>=0?'gain':'loss'} of ${fmt(Math.abs(g))}`);
+}
+function editTaxLog(id){
+  const t=id?S.taxlog.find(x=>x.id===id):null;
+  openSheet(`<label style="margin-top:0">Type</label><select id="lType">${['gain','dividend','interest'].map(k=>`<option value="${k}" ${t&&t.type===k?'selected':''}>${k==='gain'?'Capital gain (negative for a loss)':k[0].toUpperCase()+k.slice(1)}</option>`).join('')}</select>
+  <div class="grid2"><div><label>Amount</label><input id="lAmt" type="number" inputmode="decimal" value="${t?t.amount:''}"></div><div><label>Date</label><input id="lDate" type="date" value="${t?t.date:today()}"></div></div>
+  <label>Note</label><input id="lNote" value="${esc(t?t.note:'')}">
+  ${btns(`saveTaxLog('${id||''}')`,t?`S.taxlog=S.taxlog.filter(x=>x.id!=='${id}');save();closeSheet();render()`:'')}`);
+}
+function saveTaxLog(id){
+  const rec={type:$('#lType').value,amount:num($('#lAmt').value),date:$('#lDate').value||today(),note:$('#lNote').value.trim()};
+  if(id)Object.assign(S.taxlog.find(x=>x.id===id),rec);else S.taxlog.push({id:uid(),...rec});save();closeSheet();render();
+}
+function editGoal(){
+  const G=S.goal;
+  openSheet(`<label style="margin-top:0">Net worth target</label><input id="gT" type="number" inputmode="decimal" value="${G.target||''}" placeholder="e.g. 150000">
+  <label>By when</label><input id="gD" type="month" value="${(G.date||'').slice(0,7)}">
+  <label>Expected yearly return on core index (%)</label><input id="gR" type="number" inputmode="decimal" value="${G.coreReturn}">
+  <div class="note">S&P 500 has averaged roughly 10% a year nominal over the long run, with big down years. 7 to 8% is a prudent planning number.</div>
+  ${btns('saveGoal()')}`);
+}
+function saveGoal(){Object.assign(S.goal,{target:num($('#gT').value),date:$('#gD').value,coreReturn:num($('#gR').value)||8});save();closeSheet();render()}
+function editAlloc(){
+  const A=S.alloc;
+  openSheet(`<label style="margin-top:0">High-risk share of investments (%)</label><input id="xP" type="number" inputmode="numeric" value="${A.aggrPct}">
+  <div class="note">Common guidance keeps speculative money to 5 to 20% of investments.</div>
+  <label>Monthly income target from high-risk bucket</label><input id="xI" type="number" inputmode="decimal" value="${A.aggrIncome}">
+  <label>Expected yearly return, high-risk (%)</label><input id="xR" type="number" inputmode="decimal" value="${A.aggrReturn}">
+  ${btns('saveAlloc()')}`);
+}
+function saveAlloc(){Object.assign(S.alloc,{aggrPct:Math.min(100,Math.max(0,num($('#xP').value))),aggrIncome:num($('#xI').value),aggrReturn:num($('#xR').value)||15});save();closeSheet();render()}
+function saveSettings(){Object.assign(S.settings,{income:num($('#sIncome').value),savingsTarget:num($('#sTarget').value)||20,efMonths:num($('#sEF').value)||6,currency:$('#sCur').value});save();toast('Saved');render()}
+function saveAI(){Object.assign(S.ai,{key:$('#sKey').value.trim(),model:$('#sModel').value,web:$('#sWeb').value==='1',allowTx:$('#sTx').value==='1'});save();toast('AI settings saved')}
+function openProfile(){
+  openSheet(`<b>What your AI CFO knows about your habits</b><div class="note">Written by the AI from your transactions. Edit anything that's wrong; it's used in every answer.${S.ai.profileUpdated?' Last updated '+new Date(S.ai.profileUpdated).toLocaleDateString():''}</div>
+  <textarea id="pTxt" style="min-height:260px;margin-top:10px">${esc(S.ai.profile)}</textarea>
+  <button class="btn" onclick="S.ai.profile=$('#pTxt').value;save();closeSheet();toast('Profile saved')">Save</button>
+  <button class="btn ghost" onclick="closeSheet();aiLearn()">Re-learn from transactions</button>
+  <button class="btn danger" onclick="S.ai.profile='';S.ai.profileUpdated=null;save();closeSheet();render()">Delete profile</button>`);
+}
+
+/* =========================================================
+   AI (Claude API, called directly from the phone)
+   ========================================================= */
+function aiContext(){
+  const C=catById(),now=thisMonth(),W=wealth(),gp=goalPlan(),ty=taxYear(),U=unrealised(),mp=movePlan();
+  const months=[0,1,2,3,4,5].map(i=>shiftMonth(now,-i)).map(m=>{const s=stats(m);return{month:m,income:Math.round(s.inc),spent:Math.round(s.spent),saved:Math.round(s.saved),byCategory:Object.fromEntries(Object.entries(s.byCat).map(([k,v])=>[C[k]?.name||'Uncategorised',Math.round(v)]))}});
+  const ctx={today:today(),currency:S.settings.currency,plannedMonthlyIncome:S.settings.income,savingsTargetPct:S.settings.savingsTarget,safetyNetMonths:S.settings.efMonths,
+    budgets:S.categories.map(c=>({name:c.name,type:c.kind,budget:c.budget})),last6Months:months,
+    currentFlags:cfo(now).F.map(f=>`[${f.sev}] ${f.title}: ${f.detail}`),
+    accounts:S.accounts.map(a=>({name:a.name,type:a.type,balance:a.balance,apr:a.rate||undefined})),
+    holdings:S.holdings.map(h=>({name:h.name,ticker:h.ticker,bucket:h.bucket==='aggr'?'high-risk':'core',value:h.value,cost:h.cost,updated:h.updated})),
+    netWorth:Math.round(W.nw),avgMonthlySaving:Math.round(W.monthly),
+    goal:gp?{target:S.goal.target,by:S.goal.date,requiredMonthly:Math.round(gp.required),onTrack:gp.onTrack,assumedReturnPct:+W.blended.toFixed(1)}:'not set',
+    allocation:{highRiskTargetPct:S.alloc.aggrPct,highRiskActualPct:+W.aggrShare.toFixed(1),highRiskMonthlyIncomeGoal:S.alloc.aggrIncome,highRiskExpectedReturnPct:S.alloc.aggrReturn,coreExpectedReturnPct:S.goal.coreReturn},
+    tax:{currentResidence:REGIMES[S.tax.regime],marginalSalaryRatePct:S.tax.marginal,pensionContribThisYear:S.tax.pensionYTD,realisedThisYear:{gains:ty.gains,dividends:ty.div,interest:ty.int},unrealisedGains:Math.round(U.gain),unrealisedLosses:Math.round(U.loss),
+      plan:mp?{moveToUAE:S.tax.moveDate,returnToSpain:S.tax.returnDate||'undecided',firstNonResidentYear:mp.firstNR,beckhamEligibleFromYear:mp.beckhamYear}:'no move planned'}};
+  let tx='';
+  if(S.ai.allowTx){const from=iso(new Date(Date.now()-90*864e5));tx=S.tx.filter(t=>t.date>=from).sort((a,b)=>a.date.localeCompare(b.date)).slice(-500).map(t=>`${t.date}|${t.type==='income'?'+':'-'}${t.amount}|${t.type==='income'?'income':(C[t.cat]?.name||'Uncategorised')}|${(t.note||'').slice(0,40)}`).join('\n')}
+  return`<financial_data>\n${JSON.stringify(ctx)}\n</financial_data>`+(tx?`\n<transactions_last_90_days format="date|amount|category|description">\n${tx}\n</transactions_last_90_days>`:'')+(S.ai.profile?`\n<habit_profile>\n${S.ai.profile}\n</habit_profile>`:'');
+}
+const SYSTEM=`You are the user's personal CFO inside their "Life CFO" app. The user is tax resident in Spain (Alicante area), is considering moving to the UAE and probably returning to Spain later. They invest in a core S&P 500 / index bucket aiming for ~8-10% a year and a smaller high-risk bucket (individual stocks, trading) aiming to make a few hundred euros a month.
+
+How to behave:
+- Be direct and specific, like a sharp CFO talking to the CEO. Lead with the answer, then the numbers behind it. Use their actual figures.
+- Flag problems plainly (overspending, risk concentration, unrealistic return expectations, tax mistakes). Don't flatter.
+- For "should I buy X / is now a good time": search the web for current price, valuation, recent news and analyst context, then give a balanced view: bull case, bear case, how it fits their allocation and risk budget, position size you'd consider reasonable. Be honest that nobody can reliably time markets and that you are not a licensed financial advisor. Never present a trade as a sure thing.
+- For tax: use Spanish and UAE rules (Spain 2026 savings scale 19/21/23/27/30%; Beckham requires 5 prior non-resident tax years; UAE 0% personal tax; Spain residency is per calendar year). Search to confirm anything that may have changed. Recommend confirming big decisions with a tax advisor.
+- Keep answers under ~250 words unless asked for depth. Use short headings and bullets. Amounts in their currency. Never use em dashes.`;
+let aiBusy=false;
+async function callClaude(messages,{web=S.ai.web,maxTokens=1600,system=SYSTEM}={}){
+  if(!S.ai.key)throw new Error('Add your Claude API key first (AI CFO tab or Settings).');
+  if(!navigator.onLine)throw new Error('You are offline. AI features need internet; everything else works offline.');
+  const body={model:S.ai.model,max_tokens:maxTokens,system,messages};
+  if(web)body.tools=[{type:'web_search_20250305',name:'web_search',max_uses:4}];
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':S.ai.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j?.error?.message||('API error '+r.status));
+  return(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+}
+const QUICK={
+  review:'Give me my monthly CFO review: what went well, what went wrong, the 3 most important actions for next month, and whether I am on track for my net worth goal.',
+  goal:'How can I hit my net worth goal faster? Be concrete: which spending to cut (with amounts from my data), how to split new money between core and high-risk, and what is realistic.',
+  market:'Is now a good time to invest a lump sum into the S&P 500, or should I keep buying monthly? Look up current market conditions and valuations.',
+  portfolio:'Review my portfolio: concentration risk, whether my high-risk bucket can realistically make my monthly income target, and what to rebalance. Look up current prices for my tickers if you can.',
+  tax:'Compare staying in Spain vs moving to the UAE for my situation: salary tax, investment tax, what to do before leaving, while there, and before coming back. Use my numbers and move dates.',
+  afford:null
+};
+function aiQuick(k){
+  view='ai';render();
+  if(k==='afford'){const q=$('#q');q.value='Can I afford ';q.focus();return}
+  if(!S.ai.key)return toast('Add your API key first');
+  aiAsk(QUICK[k]);
+}
+async function aiAsk(text){
+  if(aiBusy)return;const q=$('#q');text=text||(q&&q.value.trim());if(!text)return;
+  S.ai.chat.push({role:'user',content:text});save();render();aiBusy=true;
+  const chat=$('#chat');const t=document.createElement('div');t.className='msg a';t.innerHTML='<span class="muted">Thinking'+(S.ai.web?' and checking the web':'')+'…</span>';chat.insertBefore(t,$('#chatEnd'));$('#chatEnd').scrollIntoView();
+  try{
+    const hist=S.ai.chat.slice(-10).map(m=>({role:m.role,content:m.content}));
+    hist[hist.length-1]={role:'user',content:aiContext()+'\n\n'+text};
+    const out=await callClaude(hist);
+    S.ai.chat.push({role:'assistant',content:out||'(no answer)'});S.ai.chat=S.ai.chat.slice(-40);save();
+  }catch(e){S.ai.chat.push({role:'assistant',content:'⚠️ '+e.message})}
+  aiBusy=false;if(view==='ai')render();
+}
+async function aiLearn(){
+  if(!S.ai.key)return toast('Add your API key first');
+  const b=$('#learnBtn');if(b){b.disabled=true;b.textContent='Reading your transactions…'}
+  const C=catById(),from=iso(new Date(Date.now()-180*864e5));
+  const tx=S.tx.filter(t=>t.date>=from).map(t=>`${t.date}|${t.type==='income'?'+':'-'}${t.amount}|${t.type==='income'?'income':(C[t.cat]?.name||'Uncategorised')}|${(t.note||'').slice(0,40)}`).join('\n');
+  try{
+    const out=await callClaude([{role:'user',content:`Here are my last 6 months of transactions (date|amount|category|description):\n${tx}\n\nMy previous habit profile (update it, keep what's still true):\n${S.ai.profile||'(none)'}\n\nWrite my habit profile as short markdown bullets under these headings: Going out & social, Eating & food, Travel & holidays, Recurring & subscriptions, Big or unusual spends, Trends (what is rising or falling), Watch-outs. Include frequencies and typical amounts (e.g. "goes out ~6 nights a month, ~€35 a night, mostly Fri/Sat"). Facts from the data only, no advice. Max 220 words.`}],{web:false,maxTokens:900,system:'You analyse personal spending data and write concise factual habit profiles. Never use em dashes.'});
+    S.ai.profile=out;S.ai.profileUpdated=new Date().toISOString();save();toast('Habit profile updated');render();openProfile();
+  }catch(e){toast(e.message);render()}
+}
+async function aiCategorise(){
+  if(!S.ai.key)return toast('Add your API key first');
+  const C=catById(),other=S.categories.find(c=>c.name.toLowerCase()==='other');
+  const todo=S.tx.filter(t=>t.type==='expense'&&(!C[t.cat]||(other&&t.cat===other.id))&&t.note).slice(-150);
+  if(!todo.length)return toast('Nothing to categorise');
+  toast(`Categorising ${todo.length} transactions…`);
+  const names=S.categories.map(c=>c.name);
+  try{
+    const out=await callClaude([{role:'user',content:`Categories: ${JSON.stringify(names)}\nTransactions (index|amount|description):\n${todo.map((t,i)=>`${i}|${t.amount}|${t.note}`).join('\n')}\n\nReturn ONLY a JSON array like [{"i":0,"c":"Groceries"}] using exactly one of the category names. Use "Other" only if truly unclear.`}],{web:false,maxTokens:4000,system:'You categorise bank transactions. Output only JSON.'});
+    const arr=JSON.parse(out.slice(out.indexOf('['),out.lastIndexOf(']')+1));
+    const byName=Object.fromEntries(S.categories.map(c=>[c.name,c.id]));let n=0;
+    for(const{i,c}of arr){if(todo[i]&&byName[c]&&byName[c]!==todo[i].cat){todo[i].cat=byName[c];n++}}
+    save();render();toast(`Re-categorised ${n} transactions`);
+  }catch(e){toast('Could not categorise: '+e.message)}
+}
+
+/* =========================================================
+   IMPORT / EXPORT
+   ========================================================= */
+function parseCSV(text){
+  const first=text.split(/\r?\n/)[0],d=(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':',';
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+    else if(ch==='"')q=true;else if(ch===d){row.push(f);f=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}
+    else f+=ch}
+  if(f||row.length){row.push(f);rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()));
+}
+function parseAmount(v){let s=String(v).replace(/[^\d,.\-]/g,'');if(s.includes(',')&&s.includes('.'))s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');else if(s.includes(','))s=s.replace(',','.');return parseFloat(s)||0}
+function parseDate(v){v=String(v).trim();let m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return`${m[1]}-${m[2]}-${m[3]}`;m=v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`}return null}
+function ruleCat(desc){
+  const d=desc.toLowerCase(),byName=Object.fromEntries(S.categories.map(c=>[c.name.toLowerCase(),c.id]));
+  for(const line of S.rules.split('\n')){if(!line.includes('=')||line.trim().startsWith('#'))continue;const[k,c]=line.split('=').map(x=>x.trim().toLowerCase());
+    if(k&&new RegExp('(^|[^a-z])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z])').test(d)&&byName[c])return byName[c]}
+  return byName['other']||null;
+}
+function importCSV(text){
+  const rows=parseCSV(text);if(rows.length<2)return toast('That file looks empty');
+  const H=rows[0].map(h=>h.trim().toLowerCase()),find=(...n)=>{for(const x of n){const i=H.indexOf(x);if(i>=0)return i}for(const x of n){const i=H.findIndex(h=>h.includes(x));if(i>=0)return i}return -1};
+  const iD=find('completed date','started date','date','fecha','fecha valor'),iA=find('amount','importe','cantidad'),iT=find('description','concepto','descripción','descripcion','merchant'),iS=find('state','estado'),iF=find('fee','comisión','comision'),iType=find('type','tipo');
+  if(iD<0||iA<0)return toast('Could not find date/amount columns');
+  const seen=new Set(S.tx.map(t=>t.date+'|'+t.amount.toFixed(2)+'|'+(t.note||'').toLowerCase()));
+  let added=0,dup=0,skip=0;
+  for(const r of rows.slice(1)){
+    if(iS>=0&&r[iS]&&!/completed|completado/i.test(r[iS])){skip++;continue}
+    if(iType>=0&&/^exchange$/i.test((r[iType]||'').trim())){skip++;continue}
+    const date=parseDate(r[iD]);let amt=parseAmount(r[iA]);if(iF>=0)amt-=Math.abs(parseAmount(r[iF]||0));
+    if(!date||!amt){skip++;continue}
+    const note=(iT>=0?r[iT]:'').trim(),type=amt<0?'expense':'income',amount=Math.round(Math.abs(amt)*100)/100;
+    const key=date+'|'+amount.toFixed(2)+'|'+note.toLowerCase();if(seen.has(key)){dup++;continue}seen.add(key);
+    S.tx.push({id:uid(),type,amount,cat:type==='expense'?ruleCat(note):null,date,note,src:'csv'});added++;
+  }
+  save();render();toast(`Imported ${added} · ${dup} duplicates · ${skip} skipped`);
+}
+async function exportJSON(){
+  const data={...S,ai:{...S.ai,key:''}};
+  const name=`life-cfo-backup-${today()}.json`,blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
+  try{const file=new File([blob],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Life CFO backup'});return}}catch(e){if(e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function readFile(input,cb){input.addEventListener('change',()=>{const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{cb(r.result);input.value=''};r.readAsText(f)})}
+readFile($('#fileCSV'),importCSV);
+readFile($('#fileJSON'),txt=>{try{const d=JSON.parse(txt);if(!d.categories)throw 0;ask('Replace the data on this device with this backup?',()=>{const key=S.ai.key;S=migrate(d);S.ai.key=key;save();render();toast('Backup restored')})}catch(e){toast('Not a valid backup file')}});
+
+/* =========================================================
+   WIRING
+   ========================================================= */
+$('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){view=b.dataset.v;render()}});
+$('#gear').onclick=()=>{view='settings';render()};
+$('#fab').addEventListener('click',()=>openTx());
+$('#mPrev').onclick=()=>{month=shiftMonth(month,-1);render()};
+$('#mNext').onclick=()=>{month=shiftMonth(month,1);render()};
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&e.target.id==='q'){e.preventDefault();aiAsk()}});
+render();
+if('serviceWorker'in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
