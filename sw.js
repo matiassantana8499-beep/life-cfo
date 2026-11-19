@@ -1,5 +1,5 @@
 // Life CFO offline cache. Bump VERSION when you update index.html.
-const VERSION = 'lifecfo-v3';
+const VERSION = 'lifecfo-v6';
 const FILES = ['./', './index.html', './manifest.json', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
