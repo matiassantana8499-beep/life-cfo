@@ -135,9 +135,23 @@ td:first-child,th:first-child{text-align:left}
 .msg.u{background:var(--grad);color:#fff;margin-left:auto;border-bottom-right-radius:6px}
 .msg.a{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:6px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .msg.a h3,.msg.a h4{margin:10px 0 4px;font-size:15px}.msg.a p{margin:6px 0}.msg.a ul{margin:6px 0;padding-left:20px}
-.composer{display:flex;gap:8px;position:sticky;bottom:calc(env(safe-area-inset-bottom) + 92px);padding:8px 0}
-.composer textarea{min-height:48px;height:48px;border-radius:24px;background:rgba(20,22,32,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.composer button{width:48px;height:48px;margin:0;padding:0;border-radius:50%;flex:none;display:grid;place-items:center}
+.composer{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 92px);z-index:4;display:flex;align-items:flex-end;gap:6px;padding:6px 6px 6px 8px;background:rgba(16,18,27,.92);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);border:1px solid rgba(255,255,255,.1);border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.composer textarea{flex:1;min-height:44px;max-height:120px;height:44px;padding:11px 0;border:0;border-radius:0;background:transparent;resize:none;font-size:16px;line-height:1.4;box-shadow:none!important}
+.composer button{width:44px;height:44px;margin:0;padding:0;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:0 6px 18px rgba(110,90,255,.45)}
+#chat{padding-bottom:84px}
+#chat.has-thumbs{padding-bottom:160px}
+.attach{width:40px;height:44px;flex:none;background:none;border:0;color:var(--muted);display:grid;place-items:center;padding:0;margin-left:-4px}
+.attach svg{width:22px;height:22px}
+.thumbs{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 152px);display:none;gap:8px;z-index:4}
+.thumbs div{position:relative;width:62px;height:62px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.15);box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+.thumbs button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:13px;line-height:20px;padding:0}
+.rv{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.rv:first-of-type{border-top:0}
+.rv input[type=checkbox]{width:22px;height:22px;flex:none;margin-top:2px;accent-color:#8b5bff}
+.rv select{padding:8px 10px;font-size:14px;margin-top:6px;border-radius:10px}
+.rv .grow{flex:1;min-width:0}
+.chatmeta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin:-4px 2px 12px}
 .note{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}
 .pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--card2);color:var(--muted)}
 svg.chart text{fill:var(--muted);font-size:10px}
@@ -168,6 +182,7 @@ svg.chart text{fill:var(--muted);font-size:10px}
 <div class="toast" id="toast"></div>
 <input type="file" id="fileCSV" accept=".csv,text/csv" hidden>
 <input type="file" id="fileJSON" accept=".json,application/json" hidden>
+<input type="file" id="fileImg" accept="image/*" multiple hidden>
 
 <script>
 /* =========================================================
@@ -229,7 +244,7 @@ emirates = Fun & travel
 booking = Fun & travel
 airbnb = Fun & travel`;
 function defaults(){return{v:2,
-  settings:{currency:'EUR',income:0,savingsTarget:20,efMonths:6},
+  settings:{currency:'EUR',income:0,savingsTarget:20,efMonths:6,lang:'en'},
   categories:DEFAULT_CATS.map(([name,kind])=>({id:uid(),name,kind,budget:0})),
   tx:[],accounts:[],rules:DEFAULT_RULES,
   goal:{target:0,date:'',coreReturn:8},
@@ -251,6 +266,51 @@ function save(){S.updated=new Date().toISOString();try{localStorage.setItem(KEY,
 load();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
+
+/* =========================================================
+   LANGUAGE (English / Español)
+   Works on rendered HTML: numbers, names and categories are swapped for
+   placeholders, the sentence is looked up, then values are put back.
+   ========================================================= */
+const ES_LANG=()=>S&&S.settings&&S.settings.lang==='es';
+const LOC=()=>ES_LANG()?'es-ES':undefined;
+const ES={};const ES_CAT={};
+let TR_RECORD=null;
+function reEsc(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+const ES_RX=[];
+function trText(seg){
+  const m=seg.match(/^(\s*)([\s\S]*?)(\s*)$/);const core=m[2];if(!core||!/[A-Za-z]/.test(core))return seg;
+  const vals=[];let t=core;
+  const tok=x=>''+String.fromCharCode(0xE100+vals.push(x)-1);
+  const names=S.categories.map(c=>esc(c.name)).filter(n=>n.length>1).sort((a,b)=>b.length-a.length);
+  for(const n of names){if(t.includes(n))t=t.split(n).join(tok(n))}
+  t=t.replace(/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|ene|abr|ago|sept?|dic)\.? \d{4}\b/gi,tok);
+  t=t.replace(/[−+\-]?(?:[€$£] ?)?\d[\d.,  ]*(?:[  ]?(?:€|%|AED|USD|GBP|CHF)|%)?/g,x=>{let tail='';while(/[.,  ]$/.test(x)){tail=x.slice(-1)+tail;x=x.slice(0,-1)}return tok(x)+tail});
+  let k=0;const map={};const key=t.replace(/([-])/g,(_,c)=>{map[k]=c.charCodeAt(0)-0xE100;return'{'+(k++)+'}'});
+  if(TR_RECORD)TR_RECORD.add(key);
+  if(!ES_LANG())return seg;
+  const put=es=>es.replace(/\{(\d+)\}/g,(_,j)=>{const v=vals[map[j]];return v===undefined?'':(ES_CAT[v]||v)});
+  if(ES[key])return m[1]+put(ES[key])+m[3];
+  if(/^(\{\d+\}[\s·,/]*)+$/.test(key))return m[1]+put(key)+m[3];
+  for(const[rx,fn]of ES_RX){const r=core.match(rx);if(r)return m[1]+fn(...r.slice(1))+m[3]}
+  return seg;
+}
+Object.assign(ES,{"Life CFO": "Life CFO", "CFO": "CFO", "Budget": "Presupuesto", "Spending": "Gastos", "Wealth": "Patrimonio", "Tax": "Impuestos", "AI CFO": "CFO IA", "Settings": "Ajustes", "Left to spend · {0}": "Te queda por gastar · {0}", "Net this month · {0}": "Neto del mes · {0}", "Add": "Añadir", "Import": "Importar", "Ask AI": "Pregunta a la IA", "Goal": "Objetivo", "Income": "Ingresos", "Income (plan)": "Ingresos (plan)", "Spent": "Gastado", "Invested": "Invertido", "Net worth": "Patrimonio neto", "Financial health": "Salud financiera", "Healthy": "Saludable", "Needs attention": "Requiere atención", "Action needed": "Hay que actuar", "Getting started": "Empezando", "{0} urgent": "{0} urgentes", "{0} warnings": "{0} avisos", "{0} ideas": "{0} ideas", "CFO briefing": "Informe del CFO", "Where the money went": "A dónde fue el dinero", "All clear.": "Todo en orden.", "Spent {0} of {1}": "Gastado {0} de {1}", "≈ {0} a day · {1} days left": "≈ {0} al día · quedan {1} días", "Let’s get you set up": "Vamos a configurarlo", "{0}) Settings (gear): add your monthly take-home pay. {1}) Budget: set a limit per category. {2}) Log spending with + or import your bank CSV. {3}) Wealth: add balances, investments and a net worth goal. {4}) AI CFO: paste your Claude API key.": "{0}) Ajustes (engranaje): añade tu sueldo neto mensual. {1}) Presupuesto: pon un límite por categoría. {2}) Registra gastos con + o importa el CSV de tu banco. {3}) Patrimonio: añade saldos, inversiones y un objetivo. {4}) CFO IA: pega tu clave de la API de Claude.", "Future month": "Mes futuro", "Nothing to review yet. Your budget will apply here automatically.": "Aún no hay nada que revisar. Tu presupuesto se aplicará aquí automáticamente.", "No income set": "Sin ingresos definidos", "Add your monthly take-home pay in Settings so I can judge your budget and savings rate.": "Añade tu sueldo neto mensual en Ajustes para que pueda valorar tu presupuesto y tu tasa de ahorro.", "Your budget is bigger than your income": "Tu presupuesto supera tus ingresos", "Budgets total {0} against {1} income. You need to cut {2}.": "Tus presupuestos suman {0} frente a {1} de ingresos. Tienes que recortar {2}.", "Money without a job": "Dinero sin destino", "{0} a month is not assigned. Unassigned money tends to get spent. Put it into {1}.": "{0} al mes no tienen destino. El dinero sin asignar acaba gastándose. Pásalo a {1}.", "{0} is over budget": "{0}: presupuesto superado", "{0} spent vs {1} ({2}).": "{0} gastado frente a {1} ({2}).", "{0} is on pace to overspend": "{0}: vas camino de pasarte", "At this pace you land at {0} vs {1}. To stay on track: max {2} a day for the next {3} days.": "A este ritmo acabarás en {0} frente a {1}. Para no pasarte: máximo {2} al día durante los próximos {3} días.", "No budget for {0}": "Sin presupuesto para {0}", "{0} spent with no limit set.": "{0} gastado sin límite definido.", "{0} is trending up": "{0} va en aumento", "Heading for {0} vs {1} last month ({2}).": "Camino de {0} frente a {1} el mes pasado ({2}).", "Ended at {0} vs {1} last month ({2}).": "Cerró en {0} frente a {1} el mes pasado ({2}).", "Uncategorised spending": "Gastos sin categoría", "{0} has no category. Tap those items in Spending, or let the AI CFO categorise them.": "{0} no tienen categoría. Tócalos en Gastos o deja que el CFO IA los clasifique.", "Spending more than you earn": "Gastas más de lo que ganas", "Projected spend {0} vs income {1}.": "Gasto previsto {0} frente a ingresos de {1}.", "Actual spend {0} vs income {1}.": "Gasto real {0} frente a ingresos de {1}.", "Savings rate {0} (target {1})": "Tasa de ahorro {0} (objetivo {1})", "Free up {0} this month to hit target.": "Libera {0} este mes para llegar al objetivo.", "Savings rate {0}": "Tasa de ahorro {0}", "On track vs your {0} target. Make sure the surplus actually gets invested.": "Vas bien frente a tu objetivo del {0}. Asegúrate de que el excedente se invierte de verdad.", "Wants are {0} of income": "Los caprichos son el {0} de tus ingresos", "Rule of thumb is about {0}. {1}, going out, shopping and travel are where to look.": "La referencia es un {0}. Revisa {1}, salir, compras y viajes.", "Fixed costs are {0} of income": "Los gastos fijos son el {0} de tus ingresos", "Above ~{0} leaves little room. Renegotiate housing, bills and transport once a year.": "Por encima del ~{0} queda poco margen. Renegocia vivienda, facturas y transporte una vez al año.", "Subscription creep": "Suscripciones que se acumulan", "{0} a month ({1} a year). Cancel anything unused in the last {2} days.": "{0} al mes ({1} al año). Cancela lo que no hayas usado en los últimos {2} días.", "Add your balances": "Añade tus saldos", "Go to Wealth and add your current account, savings and any debts so I can check your safety net.": "Ve a Patrimonio y añade tu cuenta corriente, ahorros y deudas para que pueda revisar tu colchón.", "Safety net: {0} of {1} months": "Colchón: {0} de {1} meses", "{0} more in cash/savings covers {1} months of essentials ({2}/month). Build this before taking more investment risk.": "Con {0} más en efectivo/ahorro cubres {1} meses de gastos esenciales ({2}/mes). Complétalo antes de asumir más riesgo.", "Idle cash opportunity": "Oportunidad: efectivo parado", "About {0} sits above your safety net plus a {1}-month buffer. Inflation eats it. Invest it per your plan, or clear expensive debt first.": "Unos {0} están por encima de tu colchón más {1} mes de margen. La inflación se los come. Inviértelos según tu plan o liquida antes la deuda cara.", "Safety net funded ({0} months)": "Colchón completo ({0} meses)", "New savings can go to investing and goals.": "El nuevo ahorro puede ir a inversión y objetivos.", "{0} costs ~{1} a year. Paying it off is a guaranteed {2} return. Do it before investing.": "{0} te cuesta ~{1} al año. Pagarla es una rentabilidad garantizada del {2}. Hazlo antes de invertir.", "Add the APR in Wealth so I can say whether to pay it off or invest.": "Añade la TAE en Patrimonio para decirte si te conviene amortizar o invertir.", "Net worth goal on track": "Objetivo de patrimonio en camino", "You save ~{0}/month; you need {1}. Projected {2} by {3}.": "Ahorras ~{0}/mes; necesitas {1}. Previsión: {2} en {3}.", "Net worth goal off track": "Objetivo de patrimonio desviado", "You need {0}/month invested but average {1}. Gap: {2}/month. See Wealth for options.": "Necesitas invertir {0}/mes y tu media es {1}. Diferencia: {2}/mes. Mira opciones en Patrimonio.", "Set a net worth goal": "Fija un objetivo de patrimonio", "Wealth tab: pick a target and date and I will tell you what to invest each month.": "En Patrimonio elige una cifra y una fecha y te diré cuánto invertir cada mes.", "Portfolio needs rebalancing": "Hay que reequilibrar la cartera", "High-risk bucket is {0} vs your {1} target. Take some profits into the core index fund.": "El bloque de alto riesgo es el {0} frente a tu objetivo del {1}. Recoge beneficios y pásalos al fondo indexado.", "High-risk bucket is {0} vs your {1} target. Direct new money to the high-risk bucket, or accept the drift.": "El bloque de alto riesgo es el {0} frente a tu objetivo del {1}. Destina dinero nuevo a ese bloque o acepta la desviación.", "Modelo {0} likely required": "Probablemente debas presentar el Modelo {0}", "About {0} in securities at foreign brokers (Revolut included). Over {1} means filing Modelo {2} between {3} Jan and {4} Mar.": "Unos {0} en valores en brókers extranjeros (Revolut incluido). Por encima de {1} hay que presentar el Modelo {2} entre el {3} de enero y el {4} de marzo.", "Year-end tax saver: pension plan": "Ahorro fiscal de fin de año: plan de pensiones", "Contributing {0} more before {1} Dec cuts your IRPF by ~{2} at your {3} marginal rate. Money is locked until retirement (or {4}+ years), so only if it fits your plan.": "Aportar {0} más antes del {1} de diciembre reduce tu IRPF en ~{2} con tu tipo marginal del {3}. El dinero queda bloqueado hasta la jubilación (o {4}+ años), así que solo si encaja en tu plan.", "Harvest losses before {0} Dec": "Aprovecha minusvalías antes del {0} de diciembre", "You realised {0} in gains this year and hold {1} in paper losses. Selling losers offsets gains. Wait {2} months before rebuying the same security or the loss is deferred.": "Has realizado {0} de ganancias este año y tienes {1} en pérdidas latentes. Vender las perdedoras compensa ganancias. Espera {2} meses antes de recomprar el mismo valor o la pérdida se difiere.", "Before the UAE move": "Antes de mudarte a EAU", "You hold {0} in unrealised gains (~{1} Spanish tax if sold now). Realising them in a year you are fully UAE resident could make them tax-free. Plan the date with an advisor.": "Tienes {0} en plusvalías latentes (~{1} de impuesto español si vendes ahora). Realizarlas en un año en que seas residente pleno en EAU podría dejarlas libres de impuestos. Planifica la fecha con un asesor.", "Reset your cost basis before returning": "Reinicia tu precio de compra antes de volver", "{0} of gains is untaxed while you are UAE resident. Spain taxes the full gain on future sales, so consider selling and rebuying before you become Spanish resident again.": "{0} de plusvalías no tributan mientras seas residente en EAU. España grava toda la ganancia en ventas futuras, así que plantéate vender y recomprar antes de volver a ser residente en España.", "Nothing logged for a week": "Una semana sin registrar nada", "Log recent spending or import a fresh bank CSV.": "Registra los gastos recientes o importa un CSV nuevo del banco.", "{0} left over from {1}": "Te sobraron {0} de {1}", "Sweep it into your investment plan before it gets spent.": "Pásalo a tu plan de inversión antes de que se gaste.", "Unassigned this month": "Sin asignar este mes", "Income {0}": "Ingresos {0}", "Budgeted {0}": "Presupuestado {0}", "Set your income in Settings (gear icon).": "Pon tus ingresos en Ajustes (icono del engranaje).", "Needs": "Necesidades", "Wants": "Caprichos", "Savings & investing": "Ahorro e inversión", "/ no budget": "/ sin presupuesto", "+ Add category": "+ Añadir categoría", "Tap a category to change its budget": "Toca una categoría para cambiar su presupuesto", "No transactions in {0}.": "No hay movimientos en {0}.", "Tap + to add one, or import a bank CSV in Settings.": "Toca + para añadir uno o importa un CSV del banco en Ajustes.", "Transactions": "Movimientos", "Uncategorised": "Sin categoría", "Investments up {0} ({1})": "Inversiones +{0} ({1})", "Investments down {0} ({1})": "Inversiones −{0} ({1})", "Add your accounts and investments below": "Añade abajo tus cuentas e inversiones", "Cash": "Efectivo", "Debt": "Deuda", "Net worth goal": "Objetivo de patrimonio", "Set a target and a date. I'll work out how much to invest each month and track you against it.": "Fija una cifra y una fecha. Calcularé cuánto invertir cada mes y haré el seguimiento.", "Target": "Objetivo", "by {0} · {1} months": "para {0} · {1} meses", "On track": "En camino", "Off track": "Desviado", "Needed / month": "Necesario / mes", "You save / month": "Ahorras / mes", "Assumes {0} a year blended return (core {1}, high-risk {2}), cash not growing. Projection at your current pace:": "Supone una rentabilidad combinada del {0} anual (núcleo {1}, alto riesgo {2}) y efectivo sin crecer. Previsión a tu ritmo actual:", ". Returns are not guaranteed; markets can fall {0}+ in a bad year.": ". La rentabilidad no está garantizada; los mercados pueden caer un {0}+ en un mal año.", "Ways to close the {0}/month gap:": "Formas de cerrar la diferencia de {0}/mes:", " cut wants spending by that amount, push the date out, or lower the target. Raising expected returns on paper does not count.": "recortar caprichos en esa cantidad, retrasar la fecha o bajar el objetivo. Subir la rentabilidad esperada sobre el papel no cuenta.", "cut wants spending by that amount, push the date out, or lower the target. Raising expected returns on paper does not count.": "recortar caprichos en esa cantidad, retrasar la fecha o bajar el objetivo. Subir la rentabilidad esperada sobre el papel no cuenta.", "Edit goal": "Editar objetivo", "Set goal": "Fijar objetivo", "Allocation plan": "Plan de reparto", "Core (S&P {0} / world index)": "Núcleo (S&P {0} / índice mundial)", "High-risk (stocks, trading)": "Alto riesgo (acciones, trading)", "Of the ~{0} you save each month: put about": "De los ~{0} que ahorras al mes: pon unos", "into the core and": "en el núcleo y", "into high-risk, on the same day each month. Buying on a fixed schedule beats trying to time the market for most people.": "en alto riesgo, el mismo día cada mes. Comprar con un calendario fijo funciona mejor que intentar adivinar el mercado para la mayoría.", "High-risk income target: {0}/month": "Objetivo de ingresos de alto riesgo: {0}/mes", "At {0} a year you need about": "Al {0} anual necesitas unos", "in the high-risk bucket (≈{0} to net it after ~{1} Spanish tax). You have": "en el bloque de alto riesgo (≈{0} para obtenerlo neto tras ~{1} de impuesto español). Tienes", ", which at {0} earns ~{1}/month on average. Sustained {2} is well above what most active traders achieve; many lose money. Treat this money as money you could lose.": ", que al {0} rinde ~{1}/mes de media. Un {2} sostenido está muy por encima de lo que logran la mayoría de traders; muchos pierden dinero. Trátalo como dinero que podrías perder.", "Edit allocation": "Editar reparto", "Investments": "Inversiones", "Core": "Núcleo", "High-risk": "Alto riesgo", "Add what you hold (index funds, stocks). Update values monthly, or ask the AI CFO to look up prices.": "Añade lo que tienes (fondos indexados, acciones). Actualiza los valores cada mes o pide al CFO IA que busque los precios.", "cost {0}": "coste {0}", "+ Add investment": "+ Añadir inversión", "Accounts": "Cuentas", "Add your bank accounts, savings and debts.": "Añade tus cuentas, ahorros y deudas.", "Current accounts": "Cuentas corrientes", "Savings": "Ahorro", "{0} investments (pension, etc.)": "Otras inversiones (pensiones, etc.)", "Other investments (pension, etc.)": "Otras inversiones (pensiones, etc.)", "updated {0}{1}{2}": "actualizado {0}{1}{2}", "{0} APR · updated {1}{2}{3}": "{0} TAE · actualizado {1}{2}{3}", "+ Add account": "+ Añadir cuenta", "your current pace ·": "tu ritmo actual ·", "pace needed": "ritmo necesario", "now": "hoy", "target": "objetivo", "Where are you tax resident this year?": "¿Dónde eres residente fiscal este año?", "Spain (standard)": "España (general)", "Spain (Beckham)": "España (Beckham)", "UAE": "EAU", "Spain (standard) ●": "España (general) ●", "Spain (Beckham) ●": "España (Beckham) ●", "UAE ●": "EAU ●", "Spain taxes your worldwide income. Investment income and gains are taxed separately from salary at {0} to {1}.": "España grava tu renta mundial. Los rendimientos y ganancias de inversión tributan aparte del salario, del {0} al {1}.", "Special inbound regime: salary taxed at a flat {0} (up to {1}k). Investment income from outside Spain is generally not taxed in Spain. Lasts the arrival year plus {2} more.": "Régimen especial de impatriados: el salario tributa a un tipo fijo del {0} (hasta {1}k). Las rentas de inversión de fuera de España en general no tributan aquí. Dura el año de llegada y {2} más.", "No personal income tax on salary, dividends, interest or gains. Spain stops taxing you only once you are no longer Spanish resident for the whole calendar year.": "Sin impuesto sobre la renta para salario, dividendos, intereses ni plusvalías. España deja de gravarte solo cuando dejas de ser residente español durante todo el año natural.", "This year's investment tax": "Impuestos de inversión de este año", "Amount": "Importe", "Realised gains {0}": "Ganancias realizadas {0}", "Dividends {0}": "Dividendos {0}", "Interest {0}": "Intereses {0}", "Tax if resident in": "Impuesto si resides en", "This year": "Este año", "If you sold all today": "Si vendieras todo hoy", "Spain {0} savings scale: {1} to {2}k, {3} to {4}k, {5} to {6}k, {7} to {8}k, {9} above. Losses offset gains; unused net losses carry forward {10} years. Beckham column assumes the income is Spanish-source; foreign-source is generally not taxed.": "Escala del ahorro {0} en España: {1} hasta {2}k, {3} hasta {4}k, {5} hasta {6}k, {7} hasta {8}k y {9} por encima. Las pérdidas compensan ganancias; las pérdidas netas no usadas se arrastran {10} años. La columna Beckham supone renta de fuente española; la extranjera en general no tributa.", "+ Log gain / dividend": "+ Registrar ganancia / dividendo", "Holdings": "Posiciones", "Spain: legal ways to pay less": "España: formas legales de pagar menos", "Pension plan deduction": "Deducción por plan de pensiones", "Up to {0}/year of personal contributions reduce your taxable salary (up to {1} with an employer plan). At your ~{2} marginal rate the remaining {3} would save ~{4}. Trade-off: locked until retirement or after {5} years; taxed as salary on the way out. It also leaves with you if you move.": "Hasta {0}/año de aportaciones personales reducen tu base imponible (hasta {1} con plan de empresa). Con tu tipo marginal del ~{2}, los {3} restantes te ahorrarían ~{4}. Contrapartida: bloqueado hasta la jubilación o {5} años; tributa como salario al rescatarlo. Si te mudas, sigue siendo tuyo.", "Funds over stocks for rebalancing": "Fondos mejor que acciones para reequilibrar", "Switching between investment funds (fondos de inversión, not ETFs) does not trigger tax in Spain. Selling ETFs or stocks does. Holding the core in a Spanish-registered index fund lets you rebalance tax-free.": "Traspasar entre fondos de inversión (no ETF) no tributa en España. Vender ETF o acciones sí. Tener el núcleo en un fondo indexado registrado en España te permite reequilibrar sin pagar impuestos.", "Harvest losses in Q{0}": "Aprovecha minusvalías en el T{0}", "Losses on high-risk positions offset gains. Do not rebuy the same security within {0} months or the loss is deferred.": "Las pérdidas en posiciones de alto riesgo compensan ganancias. No recompres el mismo valor en {0} meses o la pérdida se difiere.", "Foreign assets over {0}": "Bienes en el extranjero de más de {0}", "Securities at foreign brokers (Revolut Securities is Lithuanian) above {0}k require Modelo {1} by {2} March. Crypto abroad over {3}k: Modelo {4}.": "Los valores en brókers extranjeros (Revolut Securities es lituano) de más de {0}k obligan a presentar el Modelo {1} antes del {2} de marzo. Cripto en el extranjero de más de {3}k: Modelo {4}.", "Your marginal IRPF rate (salary)": "Tu tipo marginal de IRPF (salario)", "Pension contributions so far in {0}": "Aportaciones a pensiones en {0} hasta ahora", "Spain → UAE → Spain plan": "Plan España → EAU → España", "Move to UAE (month)": "Mudanza a EAU (mes)", "Back to Spain (month)": "Vuelta a España (mes)", "First UAE-only tax year": "Primer año fiscal solo en EAU", "Beckham on return from": "Beckham a la vuelta desde", "Leaving in month {0} likely means more than {1} days in Spain in {2}, so you stay Spanish resident (and taxed on everything) for all of {3}. Leaving by June can make {4} your first non-resident year.": "Irte en el mes {0} probablemente supone más de {1} días en España en {2}, así que seguirás siendo residente español (y tributando por todo) todo {3}. Irte antes de julio puede hacer de {4} tu primer año como no residente.", "Returning in {0}: you would have been out {1} full tax years, so you could qualify for Beckham ({2} flat on salary for {3} years) if you return for a job.": "Volviendo en {0} habrías estado fuera {1} años fiscales completos, así que podrías acogerte a la Ley Beckham ({2} fijo sobre el salario durante {3} años) si vuelves por un trabajo.", "Returning in {0} is before {1}: you would": "Volver en {0} es antes de {1}:", "not": "no", "qualify for Beckham and go straight back to normal Spanish rates.": "podrías acogerte a la Ley Beckham y volverías directamente a los tipos normales españoles.", "Leaving": "Al irte", "Spain decides residency per calendar year: more than {0} days in Spain, or your main business/economic interests there, or spouse and minor children living there. Cut those ties and get a UAE Tax Residency Certificate ({1}+ days, or {2}+ with a residence visa and a home or job). Spain's exit tax only hits very large holdings (shares worth over {3}m, or {4}m in a company you own {5}+ of).": "España decide la residencia por año natural: más de {0} días en España, o tu núcleo principal de negocios/intereses económicos allí, o cónyuge e hijos menores viviendo allí. Corta esos vínculos y obtén el certificado de residencia fiscal de EAU ({1}+ días, o {2}+ con visado de residencia y vivienda o trabajo). El impuesto de salida español solo afecta a patrimonios muy grandes (acciones por más de {3}M, o {4}M en una sociedad de la que tengas el {5}+).", "While in the UAE": "Mientras vivas en EAU", "{0} personal tax. Watch US dividends: with no US-UAE tax treaty, US stocks withhold {1} ({2} from Spain). Prefer accumulating Irish-domiciled ETFs. Spanish-source income (e.g. renting a Spanish flat) is still taxed in Spain.": "{0} de impuesto personal. Ojo con los dividendos de EE. UU.: sin convenio EE. UU.-EAU, retienen el {1} (el {2} desde España). Mejor ETF de acumulación domiciliados en Irlanda. Las rentas de fuente española (p. ej. alquilar un piso en España) siguen tributando en España.", "Before coming back": "Antes de volver", "Spain taxes gains from your original purchase price, even gains made while you lived in the UAE. Selling and rebuying before you become Spanish resident again resets your cost basis tax-free.": "España grava la ganancia desde tu precio de compra original, incluso la generada mientras vivías en EAU. Vender y recomprar antes de volver a ser residente en España reinicia tu precio de compra sin impuestos.", "This is general information, checked {0}, not tax advice. Rules change; confirm your move with a Spanish tax advisor.": "Es información general, revisada en {0}, no asesoramiento fiscal. Las normas cambian; confirma tu mudanza con un asesor fiscal español.", "Connect your Claude API key": "Conecta tu clave de la API de Claude", "Get one at console.anthropic.com › API keys. It stays on this phone and is only sent to Anthropic. Set a monthly spend limit in the Console so a leaked key can't cost much.": "Consíguela en console.anthropic.com › API keys. Se queda en este móvil y solo se envía a Anthropic. Pon un límite de gasto mensual en la Console para que una filtración no te cueste mucho.", "API key": "Clave API", "Save key": "Guardar clave", "What the AI CFO does: monthly reviews, answers questions like \"can I afford this?\", live market research before you buy, Spain vs UAE tax scenarios, and it learns your habits (going out, travel, recurring spend) into a profile you can read and edit.": "Qué hace el CFO IA: revisiones mensuales, responde a preguntas como \"¿me lo puedo permitir?\", investiga el mercado en directo antes de comprar, compara impuestos España vs EAU y aprende tus hábitos (salir, viajes, gastos recurrentes) en un perfil que puedes leer y editar.", "📷 Scan receipt / screenshot": "📷 Escanear ticket / captura", "Monthly review": "Revisión mensual", "Hit my goal faster": "Llegar antes a mi objetivo", "Good time to buy S&P?": "¿Buen momento para el S&P?", "Review my portfolio": "Revisar mi cartera", "Spain vs UAE for me": "España vs EAU para mí", "Can I afford…": "¿Me lo puedo permitir…?", "Categorise my spending": "Clasificar mis gastos", "Let me learn your habits": "Déjame aprender tus hábitos", "Your habit profile is over a month old": "Tu perfil de hábitos tiene más de un mes", "I'll read your transactions and write down patterns (going out, travel, recurring costs, trends). You can edit it.": "Leeré tus movimientos y anotaré patrones (salir, viajes, gastos recurrentes, tendencias). Puedes editarlo.", "Learn my habits": "Aprender mis hábitos", "Refresh profile": "Actualizar perfil", "Reading your transactions…": "Leyendo tus movimientos…", "Ask your CFO anything about your money.": "Pregúntale a tu CFO lo que quieras sobre tu dinero.", "Ask your CFO…": "Pregunta a tu CFO…", "Add photo": "Añadir foto", "Send": "Enviar", "Add a note or just tap send": "Añade una nota o pulsa enviar", "Habit profile": "Perfil de hábitos", "Clear": "Borrar", "Web search on · sonnet {0}": "Búsqueda web activa · sonnet {0}", "Web search off · sonnet {0}": "Búsqueda web desactivada · sonnet {0}", "Web search on · haiku {0}": "Búsqueda web activa · haiku {0}", "Web search off · haiku {0}": "Búsqueda web desactivada · haiku {0}", "Web search on · opus {0}": "Búsqueda web activa · opus {0}", "Web search off · opus {0}": "Búsqueda web desactivada · opus {0}", "Thinking…": "Pensando…", "Thinking and checking the web…": "Pensando y consultando la web…", "Reading your image…": "Leyendo tu imagen…", "Reading your images…": "Leyendo tus imágenes…", "What your AI CFO knows about your habits": "Lo que tu CFO IA sabe de tus hábitos", "Written by the AI from your transactions. Edit anything that's wrong; it's used in every answer.": "Escrito por la IA a partir de tus movimientos. Corrige lo que no esté bien; se usa en cada respuesta.", "Re-learn from transactions": "Volver a aprender de los movimientos", "Delete profile": "Borrar perfil", "Review before saving": "Revisa antes de guardar", "Untick anything that's wrong. Possible duplicates are unticked.": "Desmarca lo que esté mal. Los posibles duplicados vienen desmarcados.", "possible duplicate": "posible duplicado", "Account balances": "Saldos de cuentas", "Set monthly take-home pay to {0}": "Fijar sueldo neto mensual en {0}", "Currently {0}": "Actualmente {0}", "Save selected": "Guardar seleccionados", "Discard": "Descartar", "new holding": "nueva posición", "updates existing": "actualiza la existente", "Core · cost {0} · new holding": "Núcleo · coste {0} · nueva posición", "High-risk · new holding": "Alto riesgo · nueva posición", "Core · cost {0} · updates existing": "Núcleo · coste {0} · actualiza la existente", "High-risk · updates existing": "Alto riesgo · actualiza la existente", "Core · updates existing": "Núcleo · actualiza la existente", "Core · new holding": "Núcleo · nueva posición", "High-risk · cost {0} · new holding": "Alto riesgo · coste {0} · nueva posición", "High-risk · cost {0} · updates existing": "Alto riesgo · coste {0} · actualiza la existente", "cash · updates existing account": "efectivo · actualiza la cuenta existente", "cash · new account": "efectivo · cuenta nueva", "savings · new account": "ahorro · cuenta nueva", "savings · updates existing account": "ahorro · actualiza la cuenta existente", "invest · new account": "inversión · cuenta nueva", "invest · updates existing account": "inversión · actualiza la cuenta existente", "debt · new account": "deuda · cuenta nueva", "debt · updates existing account": "deuda · actualiza la cuenta existente", "⚠️ You are offline. AI features need internet; everything else works offline.": "⚠️ Estás sin conexión. La IA necesita internet; todo lo demás funciona sin conexión.", "⚠️ Add your Claude API key first (AI CFO tab or Settings).": "⚠️ Primero añade tu clave de la API de Claude (pestaña CFO IA o Ajustes).", "Language / Idioma": "Idioma / Language", "English": "English", "Español": "Español", "Monthly take-home income": "Sueldo neto mensual", "Savings target %": "Objetivo de ahorro %", "Safety net (months)": "Colchón (meses)", "Currency": "Moneda", "Save settings": "Guardar ajustes", "Claude API key": "Clave de la API de Claude", "Model": "Modelo", "Sonnet {0} (best balance)": "Sonnet {0} (mejor equilibrio)", "Haiku {0} (cheapest)": "Haiku {0} (más barato)", "Opus {0} (deepest)": "Opus {0} (más profundo)", "Live web search (market news, prices, tax updates)": "Búsqueda web en directo (noticias, precios, cambios fiscales)", "On": "Activada", "Off": "Desactivada", "What the AI sees": "Qué ve la IA", "Full transactions (last {0} days) + summaries": "Movimientos completos (últimos {0} días) + resúmenes", "Summaries only": "Solo resúmenes", "Save AI settings": "Guardar ajustes de IA", "Import from your bank": "Importar desde tu banco", "Export a CSV statement (Revolut: Account › Statement › Excel/CSV) and pick it here. I auto-categorise and skip duplicates.": "Exporta un extracto en CSV (Revolut: Cuenta › Extracto › Excel/CSV) y selecciónalo aquí. Lo clasifico automáticamente y omito duplicados.", "Import bank CSV": "Importar CSV del banco", "Auto-categorise rules": "Reglas de clasificación automática", "Save rules": "Guardar reglas", "Backup": "Copia de seguridad", "Your data lives only on this phone. Export a backup now and then. Backups do not include your API key.": "Tus datos solo están en este móvil. Exporta una copia de vez en cuando. Las copias no incluyen tu clave API.", "Last saved:": "Último guardado:", "Export backup": "Exportar copia", "Restore backup": "Restaurar copia", "Reset everything": "Borrar todo", "Expense": "Gasto", "Category": "Categoría", "Date": "Fecha", "Note": "Nota", "optional": "opcional", "Save": "Guardar", "Save changes": "Guardar cambios", "Delete": "Eliminar", "Cancel": "Cancelar", "Category name": "Nombre de la categoría", "Monthly budget": "Presupuesto mensual", "Type": "Tipo", "Need (fixed / essential)": "Necesidad (fijo / esencial)", "Want (discretionary)": "Capricho (prescindible)", "Delete category": "Eliminar categoría", "Account name": "Nombre de la cuenta", "e.g. Revolut current": "p. ej. Revolut corriente", "Current account": "Cuenta corriente", "{0} investment (pension plan, etc.)": "Otra inversión (plan de pensiones, etc.)", "Other investment (pension plan, etc.)": "Otra inversión (plan de pensiones, etc.)", "Debt (card, loan)": "Deuda (tarjeta, préstamo)", "Balance": "Saldo", "Balance owed": "Saldo pendiente", "Interest rate (APR %)": "Tipo de interés (TAE %)", "Name": "Nombre", "e.g. S&P {0} index fund": "p. ej. fondo indexado S&P {0}", "Ticker (optional)": "Ticker (opcional)", "Bucket": "Bloque", "Current value": "Valor actual", "Total invested (cost)": "Total invertido (coste)", "Held at a foreign broker? (Revolut, IBKR, Trade Republic…)": "¿Está en un bróker extranjero? (Revolut, IBKR, Trade Republic…)", "Yes": "Sí", "No, Spanish broker": "No, bróker español", "I sold it (log the gain for tax)": "Lo he vendido (registrar la ganancia para impuestos)", "Capital gain (negative for a loss)": "Ganancia patrimonial (negativa si es pérdida)", "Dividend": "Dividendo", "Interest": "Intereses", "Net worth target": "Patrimonio objetivo", "By when": "Para cuándo", "Expected yearly return on core index (%)": "Rentabilidad anual esperada del índice (%)", "S&P {0} has averaged roughly {1} a year nominal over the long run, with big down years. {2} to {3} is a prudent planning number.": "El S&P {0} ha promediado aproximadamente un {1} anual nominal a largo plazo, con años de grandes caídas. Entre un {2} y un {3} es una cifra prudente para planificar.", "High-risk share of investments (%)": "Peso del alto riesgo en tus inversiones (%)", "Common guidance keeps speculative money to {0} to {1} of investments.": "Lo habitual es limitar el dinero especulativo a entre el {0} y el {1} de las inversiones.", "Monthly income target from high-risk bucket": "Objetivo de ingresos mensuales del bloque de alto riesgo", "Expected yearly return, high-risk (%)": "Rentabilidad anual esperada, alto riesgo (%)", "Are you sure?": "¿Seguro?", "Yes, continue": "Sí, continuar", "Delete ALL data on this device? Export a backup first if unsure.": "¿Borrar TODOS los datos de este dispositivo? Exporta antes una copia si tienes dudas.", "Delete this category? Its transactions become uncategorised.": "¿Eliminar esta categoría? Sus movimientos quedarán sin categoría.", "Replace the data on this device with this backup?": "¿Sustituir los datos de este dispositivo por esta copia?", "Added": "Añadido", "Updated": "Actualizado", "Deleted": "Eliminado", "Saved": "Guardado", "Rules saved": "Reglas guardadas", "Reset": "Borrado", "Profile saved": "Perfil guardado", "Habit profile updated": "Perfil de hábitos actualizado", "AI settings saved": "Ajustes de IA guardados", "Enter an amount": "Introduce un importe", "Name it": "Ponle un nombre", "Add your API key first": "Primero añade tu clave API", "Nothing to categorise": "No hay nada que clasificar", "Could not save on this device": "No se pudo guardar en este dispositivo", "That file looks empty": "Ese archivo parece vacío", "Could not find date/amount columns": "No encuentro las columnas de fecha/importe", "Not a valid backup file": "No es una copia válida", "Backup restored": "Copia restaurada", "Could not read that image": "No se pudo leer esa imagen", "Imported {0} · {1} duplicates · {2} skipped": "Importados {0} · {1} duplicados · {2} omitidos", "Saved {0} items": "Guardados {0} elementos", "Saved {0} item": "Guardado {0} elemento", "Re-categorised {0} transactions": "Reclasificados {0} movimientos", "Categorising {0} transactions…": "Clasificando {0} movimientos…", "Logged gain of {0}": "Ganancia registrada: {0}", "Logged loss of {0}": "Pérdida registrada: {0}", "Housing": "Vivienda", "Groceries": "Supermercado", "Bills &amp; utilities": "Facturas y suministros", "Transport": "Transporte", "Health &amp; fitness": "Salud y deporte", "Eating out": "Comer fuera", "Going out &amp; nightlife": "Salir y ocio nocturno", "Shopping": "Compras", "Subscriptions": "Suscripciones", "Fun &amp; travel": "Ocio y viajes", "Other": "Otros", "Savings &amp; investing": "Ahorro e inversión"});
+Object.assign(ES_CAT,{"Housing": "Vivienda", "Groceries": "Supermercado", "Bills &amp; utilities": "Facturas y suministros", "Transport": "Transporte", "Health &amp; fitness": "Salud y deporte", "Eating out": "Comer fuera", "Going out &amp; nightlife": "Salir y ocio nocturno", "Shopping": "Compras", "Subscriptions": "Suscripciones", "Fun &amp; travel": "Ocio y viajes", "Other": "Otros", "Savings &amp; investing": "Ahorro e inversión"});
+ES_RX.push([/^Expensive debt: (.+) at (\S+)$/,(a,b)=>`Deuda cara: ${a} al ${b}`],[/^(.+): add the interest rate$/,a=>`${a}: añade el tipo de interés`],[/^Sold (.+)$/,a=>`Vendido ${a}`],[/^e\.g\. (.+)$/,a=>`p. ej. ${a}`]);
+Object.assign(ES,{"Budgets":"Presupuestos","Found {0} items to add.":"He encontrado {0} elementos para añadir.","{0} changes ready to confirm.":"{0} cambios listos para confirmar.","{0} change ready to confirm.":"{0} cambio listo para confirmar.","Review them before they are saved.":"Revísalos antes de guardarlos.","Done.":"Hecho.","gain · {0}{1}{2}":"ganancia · {0}{1}{2}","dividend · {0}{1}{2}":"dividendo · {0}{1}{2}","interest · {0}{1}{2}":"intereses · {0}{1}{2}","updated":"actualizado"});
+function tr(html){
+  if(!ES_LANG()&&!TR_RECORD)return html;
+  let inTA=false;
+  return String(html).split(/(<(?:[^>"']|"[^"]*"|'[^']*')*>)/).map(part=>{
+    if(part.startsWith('<')){
+      if(/^<textarea/i.test(part))inTA=true;else if(/^<\/textarea/i.test(part))inTA=false;
+      return part.replace(/(placeholder|aria-label)="([^"]*)"/g,(_,a,v)=>`${a}="${trText(v)}"`);
+    }
+    return inTA?part:trText(part);
+  }).join('');
+}
+
 /* =========================================================
    UTILS
    ========================================================= */
@@ -262,12 +322,12 @@ const thisMonth=()=>today().slice(0,7);
 const thisYear=()=>new Date().getFullYear();
 function shiftMonth(m,n){const[y,mo]=m.split('-').map(Number);return iso(new Date(y,mo-1+n,1)).slice(0,7)}
 function daysIn(m){const[y,mo]=m.split('-').map(Number);return new Date(y,mo,0).getDate()}
-function monthName(m){const[y,mo]=m.split('-').map(Number);return new Date(y,mo-1,1).toLocaleDateString(undefined,{month:'short',year:'numeric'})}
+function monthName(m){const[y,mo]=m.split('-').map(Number);return new Date(y,mo-1,1).toLocaleDateString(LOC(),{month:'short',year:'numeric'})}
 function monthsBetween(a,b){const[y1,m1]=a.split('-').map(Number),[y2,m2]=b.split('-').map(Number);return(y2-y1)*12+(m2-m1)}
-function fmt(n,d=0){try{return new Intl.NumberFormat(undefined,{style:'currency',currency:S.settings.currency,minimumFractionDigits:d,maximumFractionDigits:d}).format(n||0)}catch(e){return (n||0).toFixed(d)}}
+function fmt(n,d=0){try{return new Intl.NumberFormat(LOC(),{style:'currency',currency:S.settings.currency,minimumFractionDigits:d,maximumFractionDigits:d}).format(n||0)}catch(e){return (n||0).toFixed(d)}}
 const pct=(x,d=0)=>(isFinite(x)?x:0).toFixed(d)+'%';
 const num=v=>{const x=parseFloat(String(v??'').replace(',','.'));return isFinite(x)?x:0};
-function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2600)}
+function toast(t){const el=$('#toast');el.innerHTML=tr(esc(t));el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2600)}
 const catById=()=>Object.fromEntries(S.categories.map(c=>[c.id,c]));
 const sum=(a,f=x=>x)=>a.reduce((s,x)=>s+f(x),0);
 
@@ -277,7 +337,7 @@ const ICONS=[[/hous|rent|alquiler|hogar/i,'🏠','#4fb3ff'],[/grocer|super|merca
 function catIcon(name){for(const[r,e,c]of ICONS)if(r.test(name||''))return{e,c};return{e:'•',c:'#8b91a5'}}
 function av(name,income){const{e,c}=income?{e:'💶',c:'#2ee59d'}:catIcon(name);return`<div class="av" style="background:${c}1f;border-color:${c}33">${e}</div>`}
 function money(n,d=2){
-  try{const parts=new Intl.NumberFormat(undefined,{style:'currency',currency:S.settings.currency,minimumFractionDigits:d,maximumFractionDigits:d}).formatToParts(n||0);
+  try{const parts=new Intl.NumberFormat(LOC(),{style:'currency',currency:S.settings.currency,minimumFractionDigits:d,maximumFractionDigits:d}).formatToParts(n||0);
     let main='',frac='';let seenDec=false;
     for(const p of parts){if(p.type==='decimal'){seenDec=true;frac+=p.value}else if(p.type==='fraction')frac+=p.value;else if(seenDec&&p.type==='currency'){frac+=p.value}else if(seenDec&&p.type==='literal'){frac+=p.value}else main+=p.value}
     return`<span class="money">${esc(main)}${frac?`<small>${esc(frac)}</small>`:''}</span>`}catch(e){return esc(fmt(n,d))}
@@ -288,6 +348,7 @@ const I={
   imp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
   ai:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>',
   goal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8" fill="currentColor"/></svg>',
+  clip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 6l1.5-2.5h4L15.5 6"/></svg>',
   send:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
 };
 
@@ -380,7 +441,7 @@ function cfo(m){
   const add=(sev,title,detail)=>F.push({sev,title,detail});
   const spendCats=S.categories.filter(c=>c.kind!=='save');
   const totalBudget=sum(S.categories,c=>+c.budget||0),planned=+set.income||0;
-  if(!S.tx.length&&!totalBudget&&!S.accounts.length&&!S.holdings.length){add('blue','Let\'s get you set up','1) Settings (gear): add your monthly take-home pay. 2) Budget: set a limit per category. 3) Log spending with + or import your bank CSV. 4) Wealth: add balances, investments and a net worth goal. 5) AI CFO: paste your Claude API key.');return{F,s,score:null}}
+  if(!S.tx.length&&!totalBudget&&!S.accounts.length&&!S.holdings.length){add('blue','Let’s get you set up','1) Settings (gear): add your monthly take-home pay. 2) Budget: set a limit per category. 3) Log spending with + or import your bank CSV. 4) Wealth: add balances, investments and a net worth goal. 5) AI CFO: paste your Claude API key.');return{F,s,score:null}}
   if(s.future){add('blue','Future month','Nothing to review yet. Your budget will apply here automatically.');return{F,s,score:null}}
 
   if(!planned)add('amber','No income set','Add your monthly take-home pay in Settings so I can judge your budget and savings rate.');
@@ -487,15 +548,17 @@ function md(t){
    VIEWS
    ========================================================= */
 let view='cfo',month=thisMonth();
+const NAVL={cfo:'CFO',budget:'Budget',tx:'Spending',wealth:'Wealth',tax:'Tax',ai:'AI CFO'};
 const TITLES={cfo:'Life CFO',budget:'Budget',tx:'Spending',wealth:'Wealth',tax:'Tax',ai:'AI CFO',settings:'Settings'};
 function render(){
   $('#mLabel').textContent=monthName(month);
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
   $('.month').style.display=['cfo','budget','tx'].includes(view)?'flex':'none';
   $('#fab').style.display=['ai','cfo','settings'].includes(view)?'none':'';
-  $('#title').textContent=TITLES[view];
-  $('#view').innerHTML=V[view]();
-  if(view==='ai'){const c=$('#chatEnd');c&&c.scrollIntoView()}else window.scrollTo(0,0);
+  $('#title').textContent=tr(TITLES[view]);
+  $('#view').innerHTML=tr(V[view]());
+  document.querySelectorAll('nav button').forEach(b=>{b.lastChild.textContent=tr(NAVL[b.dataset.v])});
+  if(view==='ai'){renderThumbs();const c=$('#chatEnd');c&&c.scrollIntoView()}else window.scrollTo(0,0);
 }
 const V={
 cfo(){
@@ -550,7 +613,7 @@ tx(){
   const s=stats(month);
   const days={};list.forEach(t=>(days[t.date]=days[t.date]||[]).push(t));
   return`<div class="strip" style="margin-bottom:4px"><div class="kpi"><span class="muted small">Spent</span><b>${fmt(s.spent)}</b></div><div class="kpi"><span class="muted small">Income</span><b class="pos">${fmt(s.inc)}</b></div><div class="kpi"><span class="muted small">Transactions</span><b>${list.length}</b></div></div>`+
-  Object.entries(days).map(([d,ts])=>`<h2>${new Date(d+'T12:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'short'})} <span class="muted">${fmt(sum(ts.filter(t=>t.type!=='income'),t=>t.amount))}</span></h2><div class="card">`+ts.map(t=>{const cn=C[t.cat]?.name||'Uncategorised',inc=t.type==='income';return`<div class="tx" onclick="openTx('${t.id}')">${av(cn,inc)}<div class="grow"><div>${esc(t.note||(inc?'Income':cn))}</div><div class="muted small">${inc?'Income':esc(cn)}</div></div><div class="amt-r ${inc?'pos':''}">${inc?'+':'−'}${money(t.amount)}</div></div>`}).join('')+`</div>`).join('');
+  Object.entries(days).map(([d,ts])=>`<h2>${new Date(d+'T12:00').toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'short'})} <span class="muted">${fmt(sum(ts.filter(t=>t.type!=='income'),t=>t.amount))}</span></h2><div class="card">`+ts.map(t=>{const cn=C[t.cat]?.name||'Uncategorised',inc=t.type==='income';return`<div class="tx" onclick="openTx('${t.id}')">${av(cn,inc)}<div class="grow"><div>${esc(t.note||(inc?'Income':cn))}</div><div class="muted small">${inc?'Income':esc(cn)}</div></div><div class="amt-r ${inc?'pos':''}">${inc?'+':'−'}${money(t.amount)}</div></div>`}).join('')+`</div>`).join('');
 },
 wealth(){
   const W=wealth(),gp=goalPlan(),A=S.alloc,G=S.goal;
@@ -646,6 +709,7 @@ ai(){
   <div class="card small muted">What the AI CFO does: monthly reviews, answers questions like "can I afford this?", live market research before you buy, Spain vs UAE tax scenarios, and it learns your habits (going out, travel, recurring spend) into a profile you can read and edit.</div>`;
   const stale=!A.profileUpdated||(Date.now()-new Date(A.profileUpdated).getTime())/864e5>30;
   let h=`<div class="chips">
+    <button class="chip" onclick="pickImg()">📷 Scan receipt / screenshot</button>
     <button class="chip" onclick="aiQuick('review')">Monthly review</button>
     <button class="chip" onclick="aiQuick('goal')">Hit my goal faster</button>
     <button class="chip" onclick="aiQuick('market')">Good time to buy S&P?</button>
@@ -655,15 +719,17 @@ ai(){
     <button class="chip" onclick="aiCategorise()">Categorise my spending</button>
   </div>
   ${stale&&S.tx.length?`<div class="card"><b>${A.profile?'Your habit profile is over a month old':'Let me learn your habits'}</b><div class="muted small">I'll read your transactions and write down patterns (going out, travel, recurring costs, trends). You can edit it.</div><button class="btn" id="learnBtn" onclick="aiLearn()">${A.profile?'Refresh profile':'Learn my habits'}</button></div>`:''}`;
-  h+=`<div id="chat">${A.chat.length?A.chat.map(m=>`<div class="msg ${m.role==='user'?'u':'a'}">${m.role==='user'?esc(m.content):md(m.content)}</div>`).join(''):'<div class="empty">Ask your CFO anything about your money.</div>'}<div id="chatEnd"></div></div>
-  <div class="composer"><textarea id="q" placeholder="Ask your CFO…" rows="1"></textarea><button class="btn" id="sendBtn" onclick="aiAsk()" aria-label="Send">${I.send}</button></div>
-  <div class="row small muted" style="margin-top:4px"><span>Live web search ${A.web?'on':'off'} · ${esc(A.model)}</span><span><a href="#" onclick="event.preventDefault();openProfile()">Habit profile</a> · <a href="#" onclick="event.preventDefault();S.ai.chat=[];save();render()">Clear</a></span></div>`;
+  h+=`<div class="chatmeta"><span>Web search ${A.web?'on':'off'} · ${esc(A.model.replace('claude-','').replace(/-(\d)-(\d)$/,' $1.$2'))}</span><span><a href="#" onclick="event.preventDefault();openProfile()">Habit profile</a> · <a href="#" onclick="event.preventDefault();S.ai.chat=[];save();render()">Clear</a></span></div>
+  <div id="chat">${A.chat.length?A.chat.map(m=>`<div class="msg ${m.role==='user'?'u':'a'}">${m.role==='user'?esc(m.content):md(m.content)}</div>`).join(''):'<div class="empty">Ask your CFO anything about your money.</div>'}<div id="chatEnd"></div></div>
+  <div class="thumbs" id="thumbs"></div>
+  <div class="composer"><button class="attach" onclick="pickImg()" aria-label="Add photo">${I.clip}</button><textarea id="q" placeholder="Ask your CFO…" rows="1" oninput="this.style.height='44px';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea><button class="btn" id="sendBtn" onclick="aiAsk()" aria-label="Send">${I.send}</button></div>`;
   return h;
 },
 settings(){
   const st=S.settings,A=S.ai;
   return`<div class="card">
-  <label style="margin-top:0">Monthly take-home income</label><input type="number" inputmode="decimal" id="sIncome" value="${st.income||''}" placeholder="e.g. 3200">
+  <label style="margin-top:0">Language / Idioma</label><div class="seg"><button class="${st.lang!=='es'?'on':''}" onclick="S.settings.lang='en';save();render()">English</button><button class="${st.lang==='es'?'on':''}" onclick="S.settings.lang='es';save();render()">Español</button></div>
+  <label>Monthly take-home income</label><input type="number" inputmode="decimal" id="sIncome" value="${st.income||''}" placeholder="e.g. 3200">
   <div class="grid2"><div><label>Savings target %</label><input type="number" inputmode="numeric" id="sTarget" value="${st.savingsTarget}"></div>
   <div><label>Safety net (months)</label><input type="number" inputmode="numeric" id="sEF" value="${st.efMonths}"></div></div>
   <label>Currency</label><select id="sCur">${['EUR','AED','GBP','USD','CHF'].map(c=>`<option ${c===st.currency?'selected':''}>${c}</option>`).join('')}</select>
@@ -677,7 +743,7 @@ settings(){
   <h2>Import from your bank</h2><div class="card"><div class="muted small">Export a CSV statement (Revolut: Account › Statement › Excel/CSV) and pick it here. I auto-categorise and skip duplicates.</div>
   <button class="btn ghost" onclick="$('#fileCSV').click()">Import bank CSV</button></div>
   <h2>Auto-categorise rules</h2><div class="card"><textarea class="mono" id="sRules">${esc(S.rules)}</textarea><button class="btn ghost" onclick="S.rules=$('#sRules').value;save();toast('Rules saved')">Save rules</button></div>
-  <h2>Backup</h2><div class="card"><div class="muted small">Your data lives only on this phone. Export a backup now and then. Backups do not include your API key.${S.updated?' Last saved: '+new Date(S.updated).toLocaleString():''}</div>
+  <h2>Backup</h2><div class="card"><div class="muted small">Your data lives only on this phone. Export a backup now and then. Backups do not include your API key.</div>${S.updated?`<div class="muted small" style="margin-top:6px">Last saved: <span>${new Date(S.updated).toLocaleString(LOC())}</span></div>`:''}
   <div class="grid2"><button class="btn ghost" onclick="exportJSON()">Export backup</button><button class="btn ghost" onclick="$('#fileJSON').click()">Restore backup</button></div>
   <button class="btn danger" onclick="ask('Delete ALL data on this device? Export a backup first if unsure.',()=>{S=defaults();save();render();toast('Reset')})">Reset everything</button></div>`;
 }};
@@ -701,7 +767,7 @@ function chart(gp){
 /* =========================================================
    SHEETS / FORMS
    ========================================================= */
-function openSheet(html){$('#panel').innerHTML=html;$('#sheet').classList.add('open')}
+function openSheet(html){$('#panel').innerHTML=tr(html);$('#sheet').classList.add('open')}
 function closeSheet(){$('#sheet').classList.remove('open')}
 $('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
 let _ask=null;
@@ -814,7 +880,7 @@ function saveAlloc(){Object.assign(S.alloc,{aggrPct:Math.min(100,Math.max(0,num(
 function saveSettings(){Object.assign(S.settings,{income:num($('#sIncome').value),savingsTarget:num($('#sTarget').value)||20,efMonths:num($('#sEF').value)||6,currency:$('#sCur').value});save();toast('Saved');render()}
 function saveAI(){Object.assign(S.ai,{key:$('#sKey').value.trim(),model:$('#sModel').value,web:$('#sWeb').value==='1',allowTx:$('#sTx').value==='1'});save();toast('AI settings saved')}
 function openProfile(){
-  openSheet(`<b>What your AI CFO knows about your habits</b><div class="note">Written by the AI from your transactions. Edit anything that's wrong; it's used in every answer.${S.ai.profileUpdated?' Last updated '+new Date(S.ai.profileUpdated).toLocaleDateString():''}</div>
+  openSheet(`<b>What your AI CFO knows about your habits</b><div class="note">Written by the AI from your transactions. Edit anything that's wrong; it's used in every answer.${S.ai.profileUpdated?' Last updated '+new Date(S.ai.profileUpdated).toLocaleDateString(LOC()):''}</div>
   <textarea id="pTxt" style="min-height:260px;margin-top:10px">${esc(S.ai.profile)}</textarea>
   <button class="btn" onclick="S.ai.profile=$('#pTxt').value;save();closeSheet();toast('Profile saved')">Save</button>
   <button class="btn ghost" onclick="closeSheet();aiLearn()">Re-learn from transactions</button>
@@ -848,9 +914,11 @@ How to behave:
 - Flag problems plainly (overspending, risk concentration, unrealistic return expectations, tax mistakes). Don't flatter.
 - For "should I buy X / is now a good time": search the web for current price, valuation, recent news and analyst context, then give a balanced view: bull case, bear case, how it fits their allocation and risk budget, position size you'd consider reasonable. Be honest that nobody can reliably time markets and that you are not a licensed financial advisor. Never present a trade as a sure thing.
 - For tax: use Spanish and UAE rules (Spain 2026 savings scale 19/21/23/27/30%; Beckham requires 5 prior non-resident tax years; UAE 0% personal tax; Spain residency is per calendar year). Search to confirm anything that may have changed. Recommend confirming big decisions with a tax advisor.
+- You can change the user's data only through the <data> block described in their message; the app asks them to confirm. Never claim something is saved.
 - Keep answers under ~250 words unless asked for depth. Use short headings and bullets. Amounts in their currency. Never use em dashes.`;
 let aiBusy=false;
 async function callClaude(messages,{web=S.ai.web,maxTokens=1600,system=SYSTEM}={}){
+  if(ES_LANG())system+='\n\nIMPORTANT: Always write your answer in Spanish (Spain), using euros and Spanish number formatting. Keep JSON keys and category names exactly as given, in English.';
   if(!S.ai.key)throw new Error('Add your Claude API key first (AI CFO tab or Settings).');
   if(!navigator.onLine)throw new Error('You are offline. AI features need internet; everything else works offline.');
   const body={model:S.ai.model,max_tokens:maxTokens,system,messages};
@@ -868,27 +936,38 @@ const QUICK={
   tax:'Compare staying in Spain vs moving to the UAE for my situation: salary tax, investment tax, what to do before leaving, while there, and before coming back. Use my numbers and move dates.',
   afford:null
 };
+const QUICK_ES={
+  review:'Hazme mi revisión mensual de CFO: qué fue bien, qué fue mal, las 3 acciones más importantes para el próximo mes y si voy bien para mi objetivo de patrimonio.',
+  goal:'¿Cómo puedo alcanzar antes mi objetivo de patrimonio? Sé concreto: qué gastos recortar (con importes de mis datos), cómo repartir el dinero nuevo entre el núcleo y el bloque de alto riesgo, y qué es realista.',
+  market:'¿Es buen momento para invertir una suma grande en el S&P 500, o debería seguir comprando cada mes? Consulta las condiciones y valoraciones actuales del mercado.',
+  portfolio:'Revisa mi cartera: riesgo de concentración, si mi bloque de alto riesgo puede alcanzar de forma realista mi objetivo de ingresos mensuales y qué debería reequilibrar. Busca los precios actuales de mis tickers si puedes.',
+  tax:'Compara quedarme en España frente a mudarme a EAU en mi situación: impuestos sobre el salario, sobre inversiones, qué hacer antes de irme, mientras esté allí y antes de volver. Usa mis números y fechas.'
+};
 function aiQuick(k){
   view='ai';render();
-  if(k==='afford'){const q=$('#q');q.value='Can I afford ';q.focus();return}
+  if(k==='afford'){const q=$('#q');q.value=ES_LANG()?'¿Me puedo permitir ':'Can I afford ';q.focus();return}
   if(!S.ai.key)return toast('Add your API key first');
-  aiAsk(QUICK[k]);
+  aiAsk(ES_LANG()?QUICK_ES[k]:QUICK[k]);
 }
 async function aiAsk(text){
-  if(aiBusy)return;const q=$('#q');text=text||(q&&q.value.trim());if(!text)return;
-  S.ai.chat.push({role:'user',content:text});save();render();aiBusy=true;
-  const chat=$('#chat');const t=document.createElement('div');t.className='msg a';t.innerHTML='<span class="muted">Thinking'+(S.ai.web?' and checking the web':'')+'…</span>';chat.insertBefore(t,$('#chatEnd'));$('#chatEnd').scrollIntoView();
+  if(aiBusy)return;const q=$('#q');text=text||(q&&q.value.trim());
+  if(pending.length)return aiVision(text);
+  if(!text)return;
+  S.ai.chat.push({role:'user',content:text});save();render();aiBusy=true;var pd=null;
+  const chat=$('#chat');const t=document.createElement('div');t.className='msg a';t.innerHTML='<span class="muted">'+tr('Thinking'+(S.ai.web?' and checking the web':'')+'…')+'</span>';chat.insertBefore(t,$('#chatEnd'));$('#chatEnd').scrollIntoView();
   try{
     const hist=S.ai.chat.slice(-10).map(m=>({role:m.role,content:m.content}));
-    hist[hist.length-1]={role:'user',content:aiContext()+'\n\n'+text};
+    hist[hist.length-1]={role:'user',content:aiContext()+'\n\n'+ACTIONS()+'\n\nUser message: '+text};
     const out=await callClaude(hist);
-    S.ai.chat.push({role:'assistant',content:out||'(no answer)'});S.ai.chat=S.ai.chat.slice(-40);save();
+    var pd=parseData(out||'');
+    S.ai.chat.push({role:'assistant',content:(pd.reply||'(no answer)')+(pd.n?(ES_LANG()?`\n\n**${pd.n} cambio${pd.n>1?'s':''} listo${pd.n>1?'s':''} para confirmar.**`:`\n\n**${pd.n} change${pd.n>1?'s':''} ready to confirm.**`):'')});S.ai.chat=S.ai.chat.slice(-40);save();
   }catch(e){S.ai.chat.push({role:'assistant',content:'⚠️ '+e.message})}
   aiBusy=false;if(view==='ai')render();
+  if(pd&&pd.n)openReview(pd.data);
 }
 async function aiLearn(){
   if(!S.ai.key)return toast('Add your API key first');
-  const b=$('#learnBtn');if(b){b.disabled=true;b.textContent='Reading your transactions…'}
+  const b=$('#learnBtn');if(b){b.disabled=true;b.textContent=tr('Reading your transactions…')}
   const C=catById(),from=iso(new Date(Date.now()-180*864e5));
   const tx=S.tx.filter(t=>t.date>=from).map(t=>`${t.date}|${t.type==='income'?'+':'-'}${t.amount}|${t.type==='income'?'income':(C[t.cat]?.name||'Uncategorised')}|${(t.note||'').slice(0,40)}`).join('\n');
   try{
@@ -910,6 +989,101 @@ async function aiCategorise(){
     for(const{i,c}of arr){if(todo[i]&&byName[c]&&byName[c]!==todo[i].cat){todo[i].cat=byName[c];n++}}
     save();render();toast(`Re-categorised ${n} transactions`);
   }catch(e){toast('Could not categorise: '+e.message)}
+}
+
+
+
+function dataSpec(){
+  const cats=S.categories.map(c=>c.name);
+  return `JSON shape (include only the keys you need):
+{"transactions":[{"date":"YYYY-MM-DD","amount":12.5,"type":"expense","category":"Groceries","description":"Mercadona"}],
+ "accounts":[{"name":"Revolut","type":"cash","balance":1234.56}],
+ "holdings":[{"name":"S&P 500 ETF","ticker":"VUAA","bucket":"core","value":1000,"cost":800}],
+ "budgets":[{"category":"Eating out","budget":150}],
+ "goal":{"target":150000,"date":"YYYY-MM"},
+ "monthlyIncome":3200}
+Rules: category must be exactly one of ${JSON.stringify(cats)}; type is "expense" or "income"; account type is cash, savings, invest or debt; bucket is "core" for index funds/ETFs and "aggr" for individual stocks, crypto or trading; amounts are positive numbers in ${S.settings.currency}; today is ${today()} (use it when no date is given; if the year is missing use ${thisYear()}); for an existing account or holding reuse its exact name from the data; balance and value are the NEW totals, not the change; include cost only if known.`;
+}
+const ACTIONS=()=>`If (and only if) the user asks you to add, record, log, update or change something in their data (a purchase, income, a balance, an investment, a budget, their goal or income), do it by adding a <data></data> block AFTER your reply. The app shows it to the user for confirmation before saving, so say "Here's what I'll add, confirm below" rather than claiming it is already saved. If they say which account paid, also include that account with its new balance (current balance minus the amount). Never include <data> for plain questions.
+${dataSpec()}`;
+/* ---------- images: read photos/screenshots and fill data ---------- */
+let pending=[],RV=null;
+function pickImg(){if(!S.ai.key){view='ai';render();return toast('Add your API key first')}if(view!=='ai'){view='ai';render()}$('#fileImg').click()}
+async function shrink(file){
+  const url=URL.createObjectURL(file);
+  try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+    const sc=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+    c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+    const d=c.toDataURL('image/jpeg',.85);return{data:d.split(',')[1],url:d}}
+  finally{URL.revokeObjectURL(url)}
+}
+$('#fileImg').addEventListener('change',async e=>{
+  const files=[...e.target.files].slice(0,5-pending.length);e.target.value='';
+  for(const f of files){try{pending.push(await shrink(f))}catch(err){toast('Could not read that image')}}
+  renderThumbs();const q=$('#q');if(q){q.placeholder=tr('Add a note or just tap send');q.focus()}
+});
+function renderThumbs(){
+  const el=$('#thumbs'),ch=$('#chat');if(!el)return;
+  el.innerHTML=pending.map((p,i)=>`<div><img src="${p.url}" alt=""><button onclick="pending.splice(${i},1);renderThumbs()" aria-label="Remove">×</button></div>`).join('');
+  el.style.display=pending.length?'flex':'none';if(ch)ch.classList.toggle('has-thumbs',!!pending.length);
+}
+async function aiVision(text){
+  const imgs=pending.slice();pending=[];const q=$('#q');if(q)q.value='';
+  const label=text||(ES_LANG()?'Lee esto y añádelo a mis datos':'Read this and add it to my data');
+  S.ai.chat.push({role:'user',content:`📷 ${imgs.length} image${imgs.length>1?'s':''} · ${label}`});save();render();aiBusy=true;
+  const chat=$('#chat'),t=document.createElement('div');t.className='msg a';t.innerHTML='<span class="muted">'+tr('Reading your image'+(imgs.length>1?'s':'')+'…')+'</span>';chat.insertBefore(t,$('#chatEnd'));$('#chatEnd').scrollIntoView();
+  const cats=S.categories.map(c=>c.name);
+  const instr=`Look at the attached image(s). They may be receipts, bank or card app screenshots, statements, payslips, or broker/portfolio screens.
+1) Reply briefly (max 120 words, plain markdown): what you see, and one useful CFO observation if there is one. Answer the user's note if they asked something.
+2) If there is financial data worth recording, add it AFTER your reply inside <data></data>.
+${dataSpec()}
+Extra rules for images: a receipt is ONE expense with the total; a list of bank transactions is one entry per row; skip pending, declined and internal transfers between own accounts; monthlyIncome only from a payslip (net pay). Only include what is clearly visible. If there is nothing to record, leave out the <data> block.`;
+  try{
+    const content=[...imgs.map(i=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:i.data}})),{type:'text',text:aiContext()+'\n\n'+instr+'\n\nUser note: '+label}];
+    const out=await callClaude([{role:'user',content}],{web:false,maxTokens:4000});
+    const{reply,data,n}=parseData(out);
+    S.ai.chat.push({role:'assistant',content:(reply||'Done.')+(n?(ES_LANG()?`\n\n**He encontrado ${n} elemento${n>1?'s':''} para añadir.** Revísalos antes de guardarlos.`:`\n\n**Found ${n} item${n>1?'s':''} to add.** Review them before they are saved.`):'')});S.ai.chat=S.ai.chat.slice(-40);save();
+    aiBusy=false;render();if(n)openReview(data);
+  }catch(e){S.ai.chat.push({role:'assistant',content:'⚠️ '+e.message});save();aiBusy=false;render()}
+}
+function parseData(out){
+  const m=out.match(/<data>([\s\S]*?)<\/data>/),reply=out.replace(/<data>[\s\S]*?<\/data>/g,'').replace(/<\/?data>/g,'').trim();
+  let data=null;if(m){try{const j=m[1];data=JSON.parse(j.slice(j.indexOf('{'),j.lastIndexOf('}')+1))}catch(e){}}
+  const n=data?(data.transactions||[]).length+(data.accounts||[]).length+(data.holdings||[]).length+(data.budgets||[]).length+(data.goal&&+data.goal.target?1:0)+(+data.monthlyIncome>0?1:0):0;
+  return{reply,data,n};
+}
+function openReview(d){
+  const C=S.categories,byName=Object.fromEntries(C.map(c=>[c.name.toLowerCase(),c.id])),other=byName['other']||C[0].id;
+  const seen=new Set(S.tx.map(t=>t.date+'|'+(+t.amount).toFixed(2)));
+  RV={tx:(d.transactions||[]).filter(t=>+t.amount>0&&/^\d{4}-\d{2}-\d{2}$/.test(t.date||'')).map(t=>({...t,amount:Math.round(Math.abs(+t.amount)*100)/100,type:t.type==='income'?'income':'expense',cat:byName[(t.category||'').toLowerCase()]||other,dup:seen.has(t.date+'|'+Math.abs(+t.amount).toFixed(2))})),
+      acc:(d.accounts||[]).filter(a=>a.name&&isFinite(+a.balance)),hold:(d.holdings||[]).filter(h=>h.name&&isFinite(+h.value)),income:+d.monthlyIncome>0?+d.monthlyIncome:null,
+      bud:(d.budgets||[]).map(b=>({...b,c:C.find(c=>c.name.toLowerCase()===String(b.category||'').toLowerCase())})).filter(b=>b.c&&isFinite(+b.budget)),
+      goal:d.goal&&+d.goal.target>0&&/^\d{4}-\d{2}/.test(d.goal.date||'')?{target:+d.goal.target,date:d.goal.date.slice(0,7)}:null};
+  const accEx=a=>S.accounts.find(x=>x.name.toLowerCase()===a.name.toLowerCase());
+  const holEx=h=>S.holdings.find(x=>(h.ticker&&x.ticker&&x.ticker.toUpperCase()===String(h.ticker).toUpperCase())||x.name.toLowerCase()===h.name.toLowerCase());
+  const catSel=(t,i)=>t.type==='income'?'':`<select id="rv_c${i}">${C.map(c=>`<option value="${c.id}" ${c.id===t.cat?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`;
+  let h=`<div style="font-size:19px;font-weight:750;letter-spacing:-.3px">Review before saving</div><div class="note" style="margin-top:4px">Untick anything that's wrong. Possible duplicates are unticked.</div>`;
+  if(RV.tx.length)h+=`<h2 style="margin-top:16px">Transactions</h2>`+RV.tx.map((t,i)=>`<div class="rv"><input type="checkbox" id="rv_t${i}" ${t.dup?'':'checked'}>${av(C.find(c=>c.id===t.cat)?.name,t.type==='income')}<div class="grow"><div class="row"><b style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.description||'')}</b><b class="${t.type==='income'?'pos':''}" style="white-space:nowrap">${t.type==='income'?'+':'−'}${fmt(t.amount,2)}</b></div><div class="muted small">${t.date}${t.dup?' · <span style="color:var(--amber)">possible duplicate</span>':''}</div>${catSel(t,i)}</div></div>`).join('');
+  if(RV.acc.length)h+=`<h2>Account balances</h2>`+RV.acc.map((a,i)=>`<div class="rv"><input type="checkbox" id="rv_a${i}" checked><div class="grow"><div class="row"><b style="font-weight:600">${esc(a.name)}</b><b>${fmt(+a.balance,2)}</b></div><div class="muted small">${esc(a.type||'cash')} · ${accEx(a)?'updates existing account':'new account'}</div></div></div>`).join('');
+  if(RV.hold.length)h+=`<h2>Investments</h2>`+RV.hold.map((x,i)=>`<div class="rv"><input type="checkbox" id="rv_h${i}" checked><div class="grow"><div class="row"><b style="font-weight:600">${esc(x.name)} ${x.ticker?`<span class="pill">${esc(x.ticker)}</span>`:''}</b><b>${fmt(+x.value)}</b></div><div class="muted small">${x.bucket==='aggr'?'High-risk':'Core'}${x.cost?' · cost '+fmt(+x.cost):''} · ${holEx(x)?'updates existing':'new holding'}</div></div></div>`).join('');
+  if(RV.bud.length)h+=`<h2>Budgets</h2>`+RV.bud.map((b,i)=>`<div class="rv"><input type="checkbox" id="rv_b${i}" checked>${av(b.c.name)}<div class="grow"><div class="row"><b style="font-weight:600">${esc(b.c.name)}</b><b>${fmt(+b.budget)}</b></div><div class="muted small">${fmt(b.c.budget||0)} → ${fmt(+b.budget)}</div></div></div>`).join('');
+  if(RV.goal)h+=`<h2>Net worth goal</h2><div class="rv"><input type="checkbox" id="rv_g" checked><div class="grow"><div class="row"><b style="font-weight:600">${fmt(RV.goal.target)}</b><b>${monthName(RV.goal.date)}</b></div></div></div>`;
+  if(RV.income)h+=`<h2>Income</h2><div class="rv"><input type="checkbox" id="rv_inc" checked><div class="grow"><b style="font-weight:600">Set monthly take-home pay to ${fmt(RV.income)}</b><div class="muted small">Currently ${fmt(S.settings.income)}</div></div></div>`;
+  h+=`<button class="btn" onclick="applyReview()">Save selected</button><button class="btn ghost" onclick="closeSheet()">Discard</button>`;
+  openSheet(h);
+}
+function applyReview(){
+  if(!RV)return;let n=0;const d=today();
+  RV.tx.forEach((t,i)=>{if(!$('#rv_t'+i)?.checked)return;const sel=$('#rv_c'+i);S.tx.push({id:uid(),type:t.type,amount:t.amount,cat:t.type==='income'?null:(sel?sel.value:t.cat),date:t.date,note:t.description||'',src:'image'});n++});
+  RV.acc.forEach((a,i)=>{if(!$('#rv_a'+i)?.checked)return;const ty=['cash','savings','invest','debt'].includes(a.type)?a.type:'cash',ex=S.accounts.find(x=>x.name.toLowerCase()===a.name.toLowerCase());
+    if(ex)Object.assign(ex,{balance:Math.abs(+a.balance),updated:d});else S.accounts.push({id:uid(),name:a.name,type:ty,balance:Math.abs(+a.balance),rate:0,updated:d});n++});
+  RV.hold.forEach((x,i)=>{if(!$('#rv_h'+i)?.checked)return;const ex=S.holdings.find(h=>(x.ticker&&h.ticker&&h.ticker.toUpperCase()===String(x.ticker).toUpperCase())||h.name.toLowerCase()===x.name.toLowerCase());
+    if(ex){ex.value=+x.value;if(+x.cost)ex.cost=+x.cost;ex.updated=d}else S.holdings.push({id:uid(),name:x.name,ticker:String(x.ticker||'').toUpperCase(),bucket:x.bucket==='aggr'?'aggr':'core',value:+x.value,cost:+x.cost||+x.value,foreign:true,updated:d});n++});
+  RV.bud.forEach((b,i)=>{if(!$('#rv_b'+i)?.checked)return;b.c.budget=Math.abs(+b.budget);n++});
+  if(RV.goal&&$('#rv_g')?.checked){S.goal.target=RV.goal.target;S.goal.date=RV.goal.date;n++}
+  if(RV.income&&$('#rv_inc')?.checked){S.settings.income=RV.income;n++}
+  RV=null;save();closeSheet();render();toast(`Saved ${n} item${n===1?'':'s'}`);
 }
 
 /* =========================================================
